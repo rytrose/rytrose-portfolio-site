@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { useMemo, useCallback, useState } from "react";
 import anime from "animejs";
 
+import { atLeastSm } from "../../utils/responsive";
 import useEventListener from "../../hooks/useEventListener";
 
 const Name = () => {
@@ -27,7 +29,7 @@ const Name = () => {
 
   const animateMouseEnter = useCallback(
     (_) => {
-      if (window.matchMedia("(min-width: 640px)").matches) {
+      if (atLeastSm(window)) {
         const letterEls = document.querySelectorAll(
           "*[class*='rytrose-'],.non-rytrose"
         );
@@ -54,7 +56,7 @@ const Name = () => {
   );
 
   const animateMouseLeave = useCallback((_) => {
-    if (window.matchMedia("(min-width: 640px)").matches) {
+    if (atLeastSm(window)) {
       const els = document.querySelectorAll(
         "*[class*='rytrose-'],.non-rytrose"
       );
@@ -79,21 +81,26 @@ const Name = () => {
   useEventListener("mouseleave", animateMouseLeave, eventElement);
 
   return (
-    <div ref={nameRef} className="font-serif text-2xl whitespace-nowrap">
-      {[...fullName].map((letter, i) => {
-        return (
-          <span
-            key={`${i}-${letter}`}
-            id={rytroseChars.has(i) ? `rytrose-${i}` : `non-rytrose-${i}`}
-            className={`inline-block ${
-              rytroseChars.has(i) ? `rytrose-${i}` : "non-rytrose"
-            }`}
-          >
-            {letter === " " ? <>&nbsp;</> : letter}
-          </span>
-        );
-      })}
-    </div>
+    <Link href="/">
+      <div
+        ref={nameRef}
+        className="font-serif text-2xl whitespace-nowrap cursor-default"
+      >
+        {[...fullName].map((letter, i) => {
+          return (
+            <span
+              key={`${i}-${letter}`}
+              id={rytroseChars.has(i) ? `rytrose-${i}` : `non-rytrose-${i}`}
+              className={`inline-block ${
+                rytroseChars.has(i) ? `rytrose-${i}` : "non-rytrose"
+              }`}
+            >
+              {letter === " " ? <>&nbsp;</> : letter}
+            </span>
+          );
+        })}
+      </div>
+    </Link>
   );
 };
 

@@ -18,8 +18,10 @@ const Nav = () => {
           </svg>
         </button>
       </div>
-      <div className="w-full block flex-grow">
+      <div className="w-full block flex-grow sm:flex sm:gap-4">
+        <NavLink href="/">home</NavLink>
         <NavLink href="/bio">bio</NavLink>
+        <NavLink href="/projects">projects</NavLink>
       </div>
     </nav>
   );

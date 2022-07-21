@@ -44,7 +44,11 @@ module.exports = {
         "monospace",
       ],
     },
-    extend: {},
+    extend: {
+      screens: {
+        "can-hover": { raw: "(hover: hover) and (pointer: fine)" },
+      },
+    },
   },
   plugins: [],
 };
