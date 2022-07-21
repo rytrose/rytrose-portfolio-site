@@ -1,0 +1,102 @@
+import { useEffect, useMemo, useCallback } from "react";
+import anime from "animejs";
+
+const Name = () => {
+  // Maps character index in full name to dx for translation to rytrose
+  const rytroseChars = useMemo(
+    () =>
+      new Map([
+        [0, 0],
+        [1, 0],
+        [5, -30],
+        [12, -90],
+        [13, -90],
+        [14, -90],
+        [15, -90],
+      ]),
+    []
+  );
+  const fullName = "ryan taylor rose";
+
+  const animateMouseEnter = useCallback(
+    (_) => {
+      const els = document.querySelectorAll(
+        "*[class*='rytrose-'],.non-rytrose"
+      );
+      anime.remove(els);
+      anime({
+        targets: ".non-rytrose",
+        translateY: 20,
+        opacity: 0,
+        easing: "easeOutQuint",
+        duration: 300,
+      });
+      anime({
+        targets: "*[class*='rytrose-']",
+        translateX: (el) => {
+          const i = parseInt(el.id.substring(8));
+          return rytroseChars.get(i);
+        },
+        easing: "easeInQuint",
+        duration: 200,
+      });
+    },
+    [rytroseChars]
+  );
+
+  const animateMouseLeave = useCallback((_) => {
+    const els = document.querySelectorAll("*[class*='rytrose-'],.non-rytrose");
+    anime.remove(els);
+    anime({
+      targets: ".non-rytrose",
+      translateY: 0,
+      opacity: 1,
+      easing: "easeInQuint",
+      duration: 300,
+    });
+    anime({
+      targets: "*[class*='rytrose-']",
+      translateX: 0,
+      easing: "easeOutQuint",
+      duration: 300,
+    });
+  }, []);
+
+  useEffect(() => {
+    const el = document.getElementById("animated-name");
+    el.addEventListener(
+      "mouseenter",
+      (e) => {
+        animateMouseEnter(e.target);
+      },
+      false
+    );
+    el.addEventListener(
+      "mouseleave",
+      (e) => {
+        animateMouseLeave(e.target);
+      },
+      false
+    );
+  }, [animateMouseEnter, animateMouseLeave]);
+
+  return (
+    <div id="animated-name" className="font-serif text-2xl">
+      {[...fullName].map((letter, i) => {
+        return (
+          <span
+            key={`${i}-${letter}`}
+            id={rytroseChars.has(i) ? `rytrose-${i}` : `non-rytrose-${i}`}
+            className={`inline-block ${
+              rytroseChars.has(i) ? `rytrose-${i}` : "non-rytrose"
+            }`}
+          >
+            {letter === " " ? <>&nbsp;</> : letter}
+          </span>
+        );
+      })}
+    </div>
+  );
+};
+
+export default Name;
