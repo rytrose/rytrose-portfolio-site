@@ -1,7 +1,14 @@
-import { useEffect, useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState } from "react";
 import anime from "animejs";
 
+import useEventListener from "../../hooks/useEventListener";
+
 const Name = () => {
+  const [eventElement, setEventElement] = useState();
+  const nameRef = useCallback((node) => {
+    setEventElement(node);
+  }, []);
+
   // Maps character index in full name to dx for translation to rytrose
   const rytroseChars = useMemo(
     () =>
@@ -20,68 +27,59 @@ const Name = () => {
 
   const animateMouseEnter = useCallback(
     (_) => {
+      if (window.matchMedia("(min-width: 640px)").matches) {
+        const letterEls = document.querySelectorAll(
+          "*[class*='rytrose-'],.non-rytrose"
+        );
+        anime.remove(letterEls);
+        anime({
+          targets: ".non-rytrose",
+          translateY: 20,
+          opacity: 0,
+          easing: "easeOutQuint",
+          duration: 300,
+        });
+        anime({
+          targets: "*[class*='rytrose-']",
+          translateX: (el) => {
+            const i = parseInt(el.id.substring(8));
+            return rytroseChars.get(i);
+          },
+          easing: "easeInQuint",
+          duration: 200,
+        });
+      }
+    },
+    [rytroseChars]
+  );
+
+  const animateMouseLeave = useCallback((_) => {
+    if (window.matchMedia("(min-width: 640px)").matches) {
       const els = document.querySelectorAll(
         "*[class*='rytrose-'],.non-rytrose"
       );
       anime.remove(els);
       anime({
         targets: ".non-rytrose",
-        translateY: 20,
-        opacity: 0,
-        easing: "easeOutQuint",
+        translateY: 0,
+        opacity: 1,
+        easing: "easeInQuint",
         duration: 300,
       });
       anime({
         targets: "*[class*='rytrose-']",
-        translateX: (el) => {
-          const i = parseInt(el.id.substring(8));
-          return rytroseChars.get(i);
-        },
-        easing: "easeInQuint",
-        duration: 200,
+        translateX: 0,
+        easing: "easeOutQuint",
+        duration: 300,
       });
-    },
-    [rytroseChars]
-  );
-
-  const animateMouseLeave = useCallback((_) => {
-    const els = document.querySelectorAll("*[class*='rytrose-'],.non-rytrose");
-    anime.remove(els);
-    anime({
-      targets: ".non-rytrose",
-      translateY: 0,
-      opacity: 1,
-      easing: "easeInQuint",
-      duration: 300,
-    });
-    anime({
-      targets: "*[class*='rytrose-']",
-      translateX: 0,
-      easing: "easeOutQuint",
-      duration: 300,
-    });
+    }
   }, []);
 
-  useEffect(() => {
-    const el = document.getElementById("animated-name");
-    el.addEventListener(
-      "mouseenter",
-      (e) => {
-        animateMouseEnter(e.target);
-      },
-      false
-    );
-    el.addEventListener(
-      "mouseleave",
-      (e) => {
-        animateMouseLeave(e.target);
-      },
-      false
-    );
-  }, [animateMouseEnter, animateMouseLeave]);
+  useEventListener("mouseenter", animateMouseEnter, eventElement);
+  useEventListener("mouseleave", animateMouseLeave, eventElement);
 
   return (
-    <div id="animated-name" className="font-serif text-2xl">
+    <div ref={nameRef} className="font-serif text-2xl whitespace-nowrap">
       {[...fullName].map((letter, i) => {
         return (
           <span

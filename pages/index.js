@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Nav from "../components/nav/Nav";
 
-export default function Home() {
+const Home = () => {
   return (
     <div>
       <Head>
@@ -11,8 +11,10 @@ export default function Home() {
       </Head>
 
       <div className="border-b-[1px] border-slate-300">
-        <Nav></Nav>
+        <Nav />
       </div>
     </div>
   );
-}
+};
+
+export default Home;
