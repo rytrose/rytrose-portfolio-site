@@ -9,11 +9,7 @@ const Layout = ({ children }) => {
         <meta name="description" content="Ryan Rose" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
-      <div className="border-b-[1px] border-slate-300">
-        <Nav />
-      </div>
-      {children}
+      <Nav>{children}</Nav>
     </div>
   );
 };
