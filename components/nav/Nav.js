@@ -1,14 +1,33 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { atLeastSm } from "../../utils/responsive";
 import Name from "./Name";
 import NavLink from "./NavLink";
+import useResizeObserver from "use-resize-observer";
 
 const Nav = ({ children }) => {
   const hamburgerInput = useRef();
   const mobileMenu = useRef();
+  const navRef = useRef();
 
+  // Close mobile menu if window changes size to remove mobile menu
+  const onWindowResize = useCallback(
+    (_) => {
+      if (atLeastSm(window) && hamburgerInput.current.checked) {
+        hamburgerInput.current.checked = false;
+        mobileMenu.current.checked = false;
+      }
+    },
+    [hamburgerInput]
+  );
+
+  // Detect changes in window size
+  useResizeObserver({
+    ref: navRef,
+    onResize: onWindowResize,
+  });
+
+  // Close mobile menu when a link is clicked
   const onLinkClick = () => {
-    // Close menu
     hamburgerInput.current.click();
   };
 
@@ -47,12 +66,13 @@ const Nav = ({ children }) => {
 
   return (
     <>
-      <nav className="fixed overscroll-none top-0 left-0">
+      <nav ref={navRef} className="fixed overscroll-none top-0 left-0">
         <div className="flex items-center gap-4 px-3 py-2 bg-white border-b-[1px] border-slate-300">
           <div className="flex-grow sm:flex-none">
             <Name />
           </div>
           <div className="hidden sm:flex sm:gap-4">{links("below")}</div>
+          {/* TODO -- add social links */}
           <label className="order-last outline-none cursor-pointer sm:hidden">
             <input
               ref={hamburgerInput}
@@ -61,10 +81,8 @@ const Nav = ({ children }) => {
               onClick={onMobileMenu}
             />
             <svg
-              className="h-5 w-5 fill-slate-400 
-              hover:fill-slate-500 
-              peer-checked:fill-slate-600 
-              peer-checked:hover:fill-slate-500
+              className="h-5 w-5 fill-slate-400
+              peer-checked:fill-slate-600
               [&>*]:transition-[opacity,transform] [&>*]:duration-500
               peer-checked:[&>.line-1]:rotate-45 [&>.line-1]:origin-[1px_5px] 
               peer-checked:[&>.line-2]:opacity-0
@@ -104,7 +122,7 @@ const Nav = ({ children }) => {
           </div>
         </div>
       </nav>
-      <main className="mt-[49px] overscroll-y-auto">{children}</main>
+      <div className="mt-[49px] overscroll-y-auto">{children}</div>
     </>
   );
 };

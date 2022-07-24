@@ -9,7 +9,9 @@ const Layout = ({ children }) => {
         <meta name="description" content="Ryan Rose" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Nav>{children}</Nav>
+      <Nav>
+        <div className="flex py-4 mx-8 sm:py-8 sm:mx-24">{children}</div>
+      </Nav>
     </div>
   );
 };
