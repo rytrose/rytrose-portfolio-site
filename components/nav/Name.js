@@ -100,7 +100,7 @@ const Name = () => {
   );
 
   return (
-    <Link href="/">
+    <>
       <div
         ref={nameRef}
         className="font-serif text-2xl whitespace-nowrap cursor-default"
@@ -119,7 +119,7 @@ const Name = () => {
           );
         })}
       </div>
-    </Link>
+    </>
   );
 };
 

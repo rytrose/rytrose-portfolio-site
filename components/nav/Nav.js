@@ -1,26 +1,34 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useState, useRef } from "react";
 import { atLeastSm } from "../../utils/responsive";
 import Name from "./Name";
 import NavLink from "./NavLink";
 import useResizeObserver from "use-resize-observer";
+import useEventListener from "../../hooks/useEventListener";
 
 const Nav = ({ children }) => {
   const hamburgerInput = useRef();
-  const mobileMenu = useRef();
+  const mobileMenuInput = useRef();
   const navRef = useRef();
+
+  // For some reason, useEventListener does not work with just useRef.
+  // Instead, populate the element with a callback ref.
+  const [mobileMenuElement, setMobileMenuElement] = useState();
+  const mobileMenuRef = useCallback((node) => {
+    setMobileMenuElement(node);
+  }, []);
 
   // Close mobile menu if window changes size to remove mobile menu
   const onWindowResize = useCallback(
     (_) => {
       if (atLeastSm(window) && hamburgerInput.current.checked) {
         hamburgerInput.current.checked = false;
-        mobileMenu.current.checked = false;
+        mobileMenuInput.current.checked = false;
       }
     },
     [hamburgerInput]
   );
 
-  // Detect changes in window size
+  // Detect changes in window size to collapse mobile menu if hiding for desktop
   useResizeObserver({
     ref: navRef,
     onResize: onWindowResize,
@@ -31,59 +39,76 @@ const Nav = ({ children }) => {
     hamburgerInput.current.click();
   };
 
-  const links = (selectedPosition) => (
+  const links = (
     <>
-      <NavLink
-        href="/"
-        selectedPosition={selectedPosition}
-        onClick={onLinkClick}
-      >
+      <NavLink href="/" onClick={onLinkClick}>
         home
       </NavLink>
-      <NavLink
-        href="/bio"
-        selectedPosition={selectedPosition}
-        onClick={onLinkClick}
-      >
+      <NavLink href="/bio" onClick={onLinkClick}>
         bio
       </NavLink>
-      <NavLink
-        href="/projects"
-        selectedPosition={selectedPosition}
-        onClick={onLinkClick}
-      >
+      <NavLink href="/projects" onClick={onLinkClick}>
         projects
       </NavLink>
     </>
   );
 
-  const onMobileMenu = (e) => {
+  // On mobile hamburger menu press, check additional checkbox
+  // used as peer, and set overflow-hidden to prevent content
+  // from scrolling under mobile menu.
+  const onMobileMenuInput = (e) => {
     if (!atLeastSm(window)) {
-      mobileMenu.current.checked = e.target.checked;
+      mobileMenuInput.current.checked = e.target.checked;
       document.body.classList.toggle("overflow-hidden", e.target.checked);
     }
   };
 
+  // When mobile menu is beginning to open, expand height to full page and make visible
+  useEventListener(
+    "transitionstart",
+    (e) => {
+      if (e.target == mobileMenuElement && mobileMenuInput.current.checked) {
+        mobileMenuElement.style.visibility = "visible";
+        mobileMenuElement.classList.toggle("h-screen", true);
+        mobileMenuElement.classList.toggle("h-0", false);
+      }
+    },
+    mobileMenuElement
+  );
+
+  // When mobile menu is closed, minimize height and make invisible
+  useEventListener(
+    "transitionend",
+    (e) => {
+      if (e.target == mobileMenuElement && !mobileMenuInput.current.checked) {
+        mobileMenuElement.style.visibility = "hidden";
+        mobileMenuElement.classList.toggle("h-screen", false);
+        mobileMenuElement.classList.toggle("h-0", true);
+      }
+    },
+    mobileMenuElement
+  );
+
   return (
     <>
       <nav ref={navRef} className="fixed overscroll-none top-0 left-0">
-        <div className="flex items-center gap-4 px-3 py-2 bg-white border-b-[1px] border-slate-300">
+        <div className="flex items-center gap-6 px-3 py-2 bg-white border-b-[1px] border-slate-300">
           <div className="flex-grow sm:flex-none">
             <Name />
           </div>
-          <div className="hidden sm:flex sm:gap-4">{links("below")}</div>
+          <div className="hidden sm:flex sm:gap-6">{links}</div>
           {/* TODO -- add social links */}
           <label className="order-last outline-none cursor-pointer sm:hidden">
             <input
               ref={hamburgerInput}
               className="peer opacity-0 absolute left-[-99999rem]"
               type="checkbox"
-              onClick={onMobileMenu}
+              onClick={onMobileMenuInput}
             />
             <svg
               className="h-5 w-5 fill-slate-400
               peer-checked:fill-slate-600
-              [&>*]:transition-[opacity,transform] [&>*]:duration-500
+              [&>*]:transition-[opacity,transform] [&>*]:duration-300
               peer-checked:[&>.line-1]:rotate-45 [&>.line-1]:origin-[1px_5px] 
               peer-checked:[&>.line-2]:opacity-0
               peer-checked:[&>.line-3]:-rotate-45 [&>.line-3]:origin-[3px_16px]"
@@ -100,29 +125,30 @@ const Nav = ({ children }) => {
 
         {/* Used to trigger mobileMenu transitions */}
         <input
-          ref={mobileMenu}
+          ref={mobileMenuInput}
           className="peer opacity-0 absolute left-[-99999rem]"
           type="checkbox"
         />
         <div
-          className="bg-white w-screen 
-          transition-[opacity,transform] duration-500 
-          opacity-0
-          peer-checked:opacity-100 peer-checked:h-screen
-          peer-checked:[&>*]:opacity-100 peer-checked:[&>*]:translate-y-0
-          peer-checked:[&>*]:flex"
+          ref={mobileMenuRef}
+          className="bg-white w-screen h-0
+          transition-[opacity,transform] duration-500
+          invisible opacity-0
+          peer-checked:opacity-100
+          peer-checked:[&>*]:opacity-100
+          peer-checked:[&>*]:translate-y-0"
         >
           <div
-            className="hidden flex-col gap-2 pt-4 pl-8
+            className="flex flex-col gap-4 pt-8 text-center
             opacity-0 translate-y-6
             transition-[transform,opacity] duration-500
             [&>*]:text-lg"
           >
-            {links("left")}
+            {links}
           </div>
         </div>
       </nav>
-      <div className="mt-[49px] overscroll-y-auto">{children}</div>
+      <div className="mt-[49px]">{children}</div>
     </>
   );
 };

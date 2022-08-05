@@ -1,5 +1,9 @@
 const Projects = () => {
-  return <div></div>;
+  return (
+    <div>
+      <p>TODO - projects</p>
+    </div>
+  );
 };
 
 export default Projects;

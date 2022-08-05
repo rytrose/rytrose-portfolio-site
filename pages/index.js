@@ -1,8 +1,9 @@
-import Head from "next/head";
-import Nav from "../components/nav/Nav";
-
 const Home = () => {
-  return <div></div>;
+  return (
+    <div>
+      <p>TODO - home</p>
+    </div>
+  );
 };
 
 export default Home;
