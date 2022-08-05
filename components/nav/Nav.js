@@ -132,7 +132,7 @@ const Nav = ({ children }) => {
         <div
           ref={mobileMenuRef}
           className="bg-white w-screen h-0
-          transition-[opacity,transform] duration-500
+          transition-[opacity,transform] duration-300
           invisible opacity-0
           peer-checked:opacity-100
           peer-checked:[&>*]:opacity-100
@@ -141,7 +141,7 @@ const Nav = ({ children }) => {
           <div
             className="flex flex-col gap-4 pt-8 text-center
             opacity-0 translate-y-6
-            transition-[transform,opacity] duration-500
+            transition-[transform,opacity] duration-300
             [&>*]:text-lg"
           >
             {links}
