@@ -91,7 +91,10 @@ const Nav = ({ children }) => {
 
   return (
     <>
-      <nav ref={navRef} className="fixed overscroll-none top-0 left-0">
+      <nav
+        ref={navRef}
+        className="fixed overscroll-none top-0 left-0 z-[99999]"
+      >
         <div className="flex items-center gap-6 px-3 py-2 bg-white border-b-[1px] border-slate-300">
           <div className="flex-grow sm:flex-none">
             <Name />
