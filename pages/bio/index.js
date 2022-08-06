@@ -1,5 +1,9 @@
 import Image from "next/image";
-import { buildImageURL } from "../../utils/image";
+import Link from "next/link";
+import InlineLink from "../../components/InlineLink";
+import { buildS3URL } from "../../utils/s3";
+
+const RESUME_SRC = "/resume.pdf";
 
 const Bio = () => (
   <div
@@ -9,7 +13,7 @@ const Bio = () => (
     <div className="sm:order-last">
       <Image
         className="rounded-3xl"
-        src={buildImageURL("/profile-portugal.jpg")}
+        src={buildS3URL("/profile-portugal.jpg")}
         alt="Ryan smiling in the sun"
         width={480}
         height={640}
@@ -32,17 +36,28 @@ const Bio = () => (
         for multiple years, arranging dozens of pop and contemporary songs.
       </p>
       <p className="text-sm mt-4">
-        As a technologist I work by day as a cloud engineer, designing and
-        implementing microservices providing software experiences for connected
-        products. I primarily write in golang and python, but pride myself in
-        being as polyglot as possible. I have experience writing server, web
-        frontend, desktop frontend, embedded, motor control, and DSP code.
+        As a technologist I work by day as a software engineer, designing and
+        implementing distributed systems providing software experiences for
+        connected products. I primarily write in golang and python, but pride
+        myself in being as polyglot as possible. I have experience writing
+        server, web frontend, desktop frontend, embedded, motor control, and DSP
+        code.
       </p>
       <p className="text-sm mt-4">
         As a tinkerer I delight in the bodge, and feel at home at hackathons.
         While by no means an electrician, I enjoy combining sensors and
         materials, bringing my creations to life with code. My work spaces are
         cluttered with components and computing machines.
+      </p>
+      <p className="mt-8">
+        <InlineLink
+          href={buildS3URL(RESUME_SRC)}
+          className="text-sm"
+          target="_blank"
+          border
+        >
+          resumé
+        </InlineLink>
       </p>
     </div>
   </div>
