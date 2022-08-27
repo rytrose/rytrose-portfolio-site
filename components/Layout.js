@@ -10,7 +10,7 @@ const Layout = ({ children }) => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Nav>
-        <div className="py-4 mx-8 sm:py-8 sm:mx-24">{children}</div>
+        <div className="py-8 mx-8 sm:mx-24">{children}</div>
       </Nav>
     </div>
   );

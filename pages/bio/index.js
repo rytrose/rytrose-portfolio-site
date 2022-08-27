@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import InlineLink from "../../components/InlineLink";
 import { buildS3URL } from "../../utils/s3";
 
@@ -7,19 +6,21 @@ const RESUME_SRC = "/resume.pdf";
 
 const Bio = () => (
   <div
-    className="flex flex-col items-center 
-    sm:flex-row sm:items-stretch sm:justify-around sm:gap-4"
+    className="flex flex-col items-center
+    lg:flex-row lg:items-stretch lg:justify-around lg:gap-4"
   >
-    <div className="sm:order-last">
+    <div className="lg:order-last overflow-hidden rounded-3xl">
       <Image
         className="rounded-3xl"
         src={buildS3URL("/profile-portugal.jpg")}
         alt="Ryan smiling in the sun"
         width={480}
         height={640}
+        placeholder="blur"
+        blurDataURL="data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAADAAQDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAT/xAAeEAACAgEFAQAAAAAAAAAAAAACAwAEAQUGERQhcf/EABUBAQEAAAAAAAAAAAAAAAAAAAID/8QAGREBAQEBAQEAAAAAAAAAAAAAAQIEABFB/9oADAMBAAIRAxEAPwCO9rFvaN5mnbeGpUpmtFgl9NLOWGheSLkxzn3Pv2IiQ23U6LB+vLDJWeFPXw7/2Q=="
       ></Image>
     </div>
-    <div className="mt-4 sm:w-1/2">
+    <div className="mt-4 lg:w-1/2">
       <p className="font-serif text-2xl">I am...</p>
       <p className="text-sm mt-4">
         ...among other things a musician, a technologist, and a tinkerer. I
@@ -44,8 +45,25 @@ const Bio = () => (
         code.
       </p>
       <p className="text-sm mt-4">
-        As a tinkerer I delight in the bodge, and feel at home at hackathons.
-        While by no means an electrician, I enjoy combining sensors and
+        As a tinkerer I delight in{" "}
+        <InlineLink
+          href="https://www.youtube.com/watch?v=lIFE7h3m40U"
+          className="text-sm"
+          target="_blank"
+          underline
+        >
+          the bodge
+        </InlineLink>
+        , and feel at home at{" "}
+        <InlineLink
+          href="https://www.youtube.com/watch?v=yI0ksQ_5avQ"
+          className="text-sm"
+          target="_blank"
+          underline
+        >
+          hackathons
+        </InlineLink>
+        . While by no means an electrician, I enjoy combining sensors and
         materials, bringing my creations to life with code. My work spaces are
         cluttered with components and computing machines.
       </p>
