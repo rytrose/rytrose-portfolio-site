@@ -10,7 +10,7 @@ const Footer = () => {
             <Socials />
           </div>
           <p className="justify-self-end font-serif text-xs">
-            © ryan taylor rose, 2022
+            © 2022, ryan taylor rose
           </p>
         </div>
       </footer>
