@@ -4,6 +4,7 @@ import Name from "./Name";
 import NavLink from "./NavLink";
 import useResizeObserver from "use-resize-observer";
 import useEventListener from "../../hooks/useEventListener";
+import Socials from "../Socials";
 
 const Nav = ({ children }) => {
   const hamburgerInput = useRef();
@@ -93,14 +94,13 @@ const Nav = ({ children }) => {
     <>
       <nav
         ref={navRef}
-        className="fixed overscroll-none top-0 left-0 z-[99999]"
+        className="fixed overscroll-none top-0 left-0 right-0 z-[99999]"
       >
-        <div className="flex items-center gap-6 px-3 py-2 bg-white border-b-[1px] border-slate-300">
-          <div className="flex-grow sm:flex-none">
+        <div className="flex items-center gap-6 px-3 py-2 bg-white border-b-[1px] border-slate-300 h-[49px]">
+          <div className="grow sm:flex-none">
             <Name />
           </div>
           <div className="hidden sm:flex sm:gap-6">{links}</div>
-          {/* TODO -- add social links */}
           <label className="order-last outline-none cursor-pointer sm:hidden">
             <input
               ref={hamburgerInput}
@@ -148,10 +148,13 @@ const Nav = ({ children }) => {
             [&>*]:text-lg"
           >
             {links}
+            <div className="flex items-center justify-center mt-4">
+              <Socials />
+            </div>
           </div>
         </div>
       </nav>
-      <div className="mt-[49px]">{children}</div>
+      <div className="mt-[49px] mb-[49px]">{children}</div>
     </>
   );
 };

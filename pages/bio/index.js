@@ -9,13 +9,13 @@ const Bio = () => (
     className="flex flex-col items-center
     lg:flex-row lg:items-stretch lg:justify-around lg:gap-4"
   >
-    <div className="lg:order-last overflow-hidden rounded-3xl">
+    {/* infline-flex required or else the wrapping div is a couple pixels larger than the Image */}
+    <div className="inline-flex lg:order-last overflow-hidden rounded-3xl">
       <Image
-        className="rounded-3xl"
         src={buildS3URL("/profile-portugal.jpg")}
         alt="Ryan smiling in the sun"
-        width={480}
-        height={640}
+        width={396}
+        height={528}
         placeholder="blur"
         blurDataURL="data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAADAAQDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAT/xAAeEAACAgEFAQAAAAAAAAAAAAACAwAEAQUGERQhcf/EABUBAQEAAAAAAAAAAAAAAAAAAAID/8QAGREBAQEBAQEAAAAAAAAAAAAAAQIEABFB/9oADAMBAAIRAxEAPwCO9rFvaN5mnbeGpUpmtFgl9NLOWGheSLkxzn3Pv2IiQ23U6LB+vLDJWeFPXw7/2Q=="
       ></Image>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   version="1.1"
+   id="svg459"
+   width="27.532043"
+   height="27.545319"
+   viewBox="0 0 27.532044 27.545319"
+   sodipodi:docname="2101282.eps"
+   inkscape:export-filename="soundcloud.svg"
+   inkscape:export-xdpi="100"
+   inkscape:export-ydpi="100"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs463" />
+  <sodipodi:namedview
+     id="namedview461"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false" />
+  <g
+     id="g467"
+     inkscape:groupmode="layer"
+     inkscape:label="Page 1"
+     transform="matrix(1.3333333,0,0,-1.3333333,-528.9613,258.71999)">
+    <path
+       d="m 397.13,173.381 h 4.264 v 13.772 h -4.264 v -13.772"
+       style="fill:#1b191c;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.1"
+       id="path499" />
+    <path
+       d="m 399.241,188.957 c 1.393,0 2.521,1.139 2.521,2.542 0,1.402 -1.128,2.541 -2.521,2.541 -1.392,0 -2.52,-1.139 -2.52,-2.541 0,-1.403 1.128,-2.542 2.52,-2.542"
+       style="fill:#1b191c;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.1"
+       id="path501" />
+    <path
+       d="m 408.208,180.61 c 0,1.937 0.892,3.09 2.598,3.09 1.567,0 2.321,-1.107 2.321,-3.09 0,-1.983 0,-7.229 0,-7.229 h 4.243 c 0,0 0,5.031 0,8.72 0,3.689 -2.092,5.473 -5.012,5.473 -2.92,0 -4.15,-2.276 -4.15,-2.276 v 1.855 h -4.09 v -13.772 h 4.09 c 0,0 0,5.107 0,7.229"
+       style="fill:#1b191c;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.1"
+       id="path503" />
+  </g>
+</svg>

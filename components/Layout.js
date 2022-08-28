@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Footer from "./Footer";
 import Nav from "./nav/Nav";
 
 const Layout = ({ children }) => {
@@ -12,6 +13,7 @@ const Layout = ({ children }) => {
       <Nav>
         <div className="py-8 mx-8 sm:mx-24">{children}</div>
       </Nav>
+      <Footer />
     </div>
   );
 };
