@@ -1,24 +1,24 @@
-import Image from "next/image";
-import InlineLink from "../../components/InlineLink";
 import { buildS3URL } from "../../utils/s3";
+import Image from "next/image";
+import S3Image from "../../components/S3Image";
+import InlineLink from "../../components/InlineLink";
 
 const RESUME_SRC = "/resume.pdf";
 
 const Bio = () => (
   <div
     className="flex flex-col items-center
-    lg:flex-row lg:items-stretch lg:justify-around lg:gap-4"
+    lg:flex-row lg:justify-around lg:gap-4"
   >
     {/* infline-flex required or else the wrapping div is a couple pixels larger than the Image */}
     <div className="inline-flex lg:order-last overflow-hidden rounded-3xl">
-      <Image
-        src={buildS3URL("/profile-portugal.jpg")}
+      <S3Image
+        path="/profile-portugal.jpg"
         alt="Ryan smiling in the sun"
         width={396}
         height={528}
-        placeholder="blur"
         blurDataURL="data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAADAAQDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAT/xAAeEAACAgEFAQAAAAAAAAAAAAACAwAEAQUGERQhcf/EABUBAQEAAAAAAAAAAAAAAAAAAAID/8QAGREBAQEBAQEAAAAAAAAAAAAAAQIEABFB/9oADAMBAAIRAxEAPwCO9rFvaN5mnbeGpUpmtFgl9NLOWGheSLkxzn3Pv2IiQ23U6LB+vLDJWeFPXw7/2Q=="
-      ></Image>
+      />
     </div>
     <div className="mt-4 lg:w-1/2">
       <p className="font-serif text-2xl">I am...</p>
