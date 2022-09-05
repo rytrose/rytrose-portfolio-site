@@ -11,7 +11,7 @@ const Projects = () => {
         before:fixed before:content-[''] before:top-0 before:w-[1px] before:h-screen before:bg-slate-300
         before:left-0 before:ml-8 sm:before:ml-12 lg:before:ml-0 lg:before:left-[50%]"
       >
-        <ProjectCard title="Flame Keepers" date="february, 2021">
+        <ProjectCard title="Flame Keepers" date="february, 2021" icon="fire">
           <p>
             <InlineLink href="https://flamekeepers.metropolisensemble.org/">
               Flame Keepers
@@ -38,7 +38,11 @@ const Projects = () => {
             its archives, and the seven hour lockout begins again.
           </p>
         </ProjectCard>
-        <ProjectCard title="chronophonics" date="july, 2020">
+        <ProjectCard
+          title="chronophonics"
+          date="july, 2020"
+          icon="record-vinyl"
+        >
           <p>
             <InlineLink href="https://nime2020.bcu.ac.uk/chronophonics/">
               Chronophonics
@@ -73,6 +77,7 @@ const Projects = () => {
         <ProjectCard
           title="shimi"
           date="may, 2019"
+          icon="robot"
           modal={
             <p className="text-sm max-w-2xl">
               <p className="mt-2 font-serif text-lg">demo</p>
@@ -128,7 +133,7 @@ const Projects = () => {
             TX2 and an extensible python codebase.
           </p>
         </ProjectCard>
-        <ProjectCard title="recorder bot" date="august, 2018">
+        <ProjectCard title="recorder bot" date="august, 2018" icon="plug">
           <p>
             An autonomous recorder player with solenoid fingers, motorized
             expressive movements, and real human hair. Built with{" "}
@@ -143,7 +148,7 @@ const Projects = () => {
           </p>
           <YoutubeEmbed embedID="zWl6llFeaVQ"></YoutubeEmbed>
         </ProjectCard>
-        <ProjectCard title="SoundCage" date="august, 2018">
+        <ProjectCard title="SoundCage" date="august, 2018" icon="bell">
           <p>
             A closet-sized tangible experience that encourages visitors to
             explore strings extending from sensor packages mounted in a PVC
@@ -151,7 +156,7 @@ const Projects = () => {
           </p>
           <YoutubeEmbed embedID="gDkEvhYeeKs"></YoutubeEmbed>
         </ProjectCard>
-        <ProjectCard title="twitthear" date="december, 2017">
+        <ProjectCard title="twitthear" date="december, 2017" icon="ear-listen">
           <p>
             An audio interface that brings Twitter to the virtual personal
             assistant Amazon Alexa. Its goal is to encode information about a
