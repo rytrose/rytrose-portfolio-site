@@ -48,7 +48,6 @@ const About = () => (
         <InlineLink
           href="https://www.youtube.com/watch?v=lIFE7h3m40U"
           className="text-sm"
-          underline
         >
           the bodge
         </InlineLink>
@@ -56,7 +55,6 @@ const About = () => (
         <InlineLink
           href="https://www.youtube.com/watch?v=yI0ksQ_5avQ"
           className="text-sm"
-          underline
         >
           hackathons
         </InlineLink>

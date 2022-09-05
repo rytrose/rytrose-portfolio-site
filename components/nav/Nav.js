@@ -144,13 +144,13 @@ const Nav = ({ children }) => {
           <div
             className="flex flex-col gap-4 pt-8 text-center
             opacity-0 translate-y-6
-            transition-[transform,opacity] duration-300
-            [&>*]:text-lg"
+            transition-[transform,opacity] duration-300"
           >
             {links}
-            <div className="flex items-center justify-center mt-4">
+            <div className="flex items-center justify-center mt-4 [&>*]:text-lg">
               <Socials />
             </div>
+            <p className="mt-4 font-serif text-sm">© 2022, ryan taylor rose</p>
           </div>
         </div>
       </nav>

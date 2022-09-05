@@ -42,7 +42,7 @@ const Modal = ({ open, onClose, children }) => {
       className={`flex flex-col transition duration-[400ms] opacity-0 backdrop:bg-slate-800 backdrop:opacity-80 rounded-xl overflow-hidden`}
       onCancel={(e) => e.preventDefault()}
     >
-      <div className="flex font-serif text-sm overflow-hidden">
+      <div className="flex font-serif text-sm h-8 overflow-hidden">
         <div className="grow"></div>
         <Button onClick={onClose}>close</Button>
       </div>
