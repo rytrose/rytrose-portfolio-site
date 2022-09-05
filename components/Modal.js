@@ -16,8 +16,10 @@ const Modal = ({ open, onClose, children }) => {
       // Show dialog to permit opacity transition
       dialogElement.showModal();
       dialogElement.classList.remove("opacity-0");
+      document.body.classList.add("overflow-hidden");
     } else {
       dialogElement.classList.add("opacity-0");
+      document.body.classList.remove("overflow-hidden");
       // Close dialog after transition ends to permit opacity transition
     }
   }, [open, dialogElement]);
