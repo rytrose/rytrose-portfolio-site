@@ -48,7 +48,6 @@ const About = () => (
         <InlineLink
           href="https://www.youtube.com/watch?v=lIFE7h3m40U"
           className="text-sm"
-          target="_blank"
           underline
         >
           the bodge
@@ -57,7 +56,6 @@ const About = () => (
         <InlineLink
           href="https://www.youtube.com/watch?v=yI0ksQ_5avQ"
           className="text-sm"
-          target="_blank"
           underline
         >
           hackathons
@@ -67,12 +65,7 @@ const About = () => (
         cluttered with components and computing machines.
       </p>
       <p className="mt-8">
-        <InlineLink
-          href={buildS3URL(RESUME_SRC)}
-          className="text-sm"
-          target="_blank"
-          border
-        >
+        <InlineLink href={buildS3URL(RESUME_SRC)} className="text-sm" border>
           resumé
         </InlineLink>
       </p>

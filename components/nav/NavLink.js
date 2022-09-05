@@ -7,10 +7,14 @@ const NavLink = ({ href, onClick, children }) => {
   return (
     <Link href={href}>
       <div
-        className="inline-block text-sm cursor-pointer text-slate-400 hover:text-slate-500 active:text-slate-600"
+        className="inline-block font-serif text-md cursor-pointer text-slate-400 hover:text-slate-500 active:text-slate-600"
         onClick={onClick}
       >
-        <p className={`${router.pathname === href && "font-medium"}`}>
+        <p
+          className={`${
+            router.pathname === href && "underline underline-offset-8"
+          }`}
+        >
           {children}
         </p>
       </div>

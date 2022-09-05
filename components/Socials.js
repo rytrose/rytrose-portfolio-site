@@ -4,7 +4,6 @@ const Socials = ({ size = 20 }) => {
       <a
         className="inline-flex"
         href="https://github.com/rytrose/"
-        target="_blank"
         rel="noreferrer"
       >
         <svg
@@ -25,7 +24,6 @@ const Socials = ({ size = 20 }) => {
       <a
         className="inline-flex"
         href="https://www.linkedin.com/in/rytrose"
-        target="_blank"
         rel="noreferrer"
       >
         <svg
@@ -45,7 +43,6 @@ const Socials = ({ size = 20 }) => {
       <a
         className="inline-flex"
         href="https://www.instagram.com/rytrose"
-        target="_blank"
         rel="noreferrer"
       >
         <svg
@@ -65,7 +62,6 @@ const Socials = ({ size = 20 }) => {
       <a
         className="inline-flex"
         href="https://twitter.com/rytrose"
-        target="_blank"
         rel="noreferrer"
       >
         <svg
@@ -83,7 +79,6 @@ const Socials = ({ size = 20 }) => {
       <a
         className="inline-flex"
         href="https://soundcloud.com/user-213142357"
-        target="_blank"
         rel="noreferrer"
       >
         <svg
