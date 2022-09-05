@@ -39,14 +39,14 @@ const Modal = ({ open, onClose, children }) => {
   return (
     <dialog
       ref={dialogRef}
-      className={`transition duration-[400ms] opacity-0 backdrop:bg-slate-800 backdrop:opacity-80 rounded-xl`}
+      className={`flex flex-col transition duration-[400ms] opacity-0 backdrop:bg-slate-800 backdrop:opacity-80 rounded-xl overflow-hidden`}
       onCancel={(e) => e.preventDefault()}
     >
-      {children}
-      <div className="flex mt-2 font-serif text-sm">
-        <div className="grow" />
+      <div className="flex font-serif text-sm overflow-hidden">
+        <div className="grow"></div>
         <Button onClick={onClose}>close</Button>
       </div>
+      <div className="overflow-y-auto mt-2">{children}</div>
     </dialog>
   );
 };

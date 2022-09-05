@@ -79,7 +79,7 @@ const Projects = () => {
           date="may, 2019"
           icon="robot"
           modal={
-            <p className="text-sm max-w-2xl">
+            <p className="text-sm">
               <p className="mt-2 font-serif text-lg">demo</p>
               <p>
                 Using a non-verbal voice designed by{" "}
