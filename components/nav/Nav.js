@@ -51,6 +51,9 @@ const Nav = ({ children }) => {
       <NavLink href="/projects" onClick={onLinkClick}>
         projects
       </NavLink>
+      <NavLink href="/graffiti" onClick={onLinkClick}>
+        graffiti
+      </NavLink>
     </>
   );
 
