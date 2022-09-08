@@ -79,7 +79,7 @@ const Projects = () => {
           date="may, 2019"
           icon="robot"
           modal={
-            <p className="text-sm">
+            <div className="text-sm">
               <p className="mt-2 font-serif text-lg">demo</p>
               <p>
                 Using a non-verbal voice designed by{" "}
@@ -92,7 +92,7 @@ const Projects = () => {
               </p>
               <YoutubeEmbed embedID="kdcU05oIBdE"></YoutubeEmbed>
               <p className="mt-8 font-serif text-lg">publications</p>
-              <p className="[&>*]:mt-2 text-sm">
+              <div className="[&>*]:mt-2 text-sm">
                 <p>
                   <InlineLink
                     href={buildS3URL("/Masters_Project_Paper_Final.pdf")}
@@ -121,8 +121,8 @@ const Projects = () => {
                     Communication (RO-MAN). IEEE, 2019.
                   </InlineLink>
                 </p>
-              </p>
-            </p>
+              </div>
+            </div>
           }
         >
           <p>

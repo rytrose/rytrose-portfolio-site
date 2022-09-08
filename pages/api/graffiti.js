@@ -3,6 +3,17 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { BUCKET_NAME, PREFIX, s3Client } from "../../utils/s3";
 import { readStreamToString } from "../../utils/stream";
 
+/*
+idea: sonified graffiti wall
+- visitor gets certain amount of "paint"
+- visitor can apply paint to canvas
+- paint gets sonified
+  - visitor can isolate their sonified paintings
+- consider: https://github.com/fabricjs/fabric.js
+  - esp. for serialization
+  - resizable canvas: https://jsfiddle.net/robsch/g8x9mjvt/
+*/
+
 export const config = {
   runtime: "experimental-edge",
 };
