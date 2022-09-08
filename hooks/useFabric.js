@@ -2,7 +2,6 @@ import { fabric } from "fabric";
 import { useRef, useCallback } from "react";
 
 const useFabric = (options) => {
-  console.log("use fabric");
   const canvasRef = useRef();
   const disposeRef = useRef();
   return {
