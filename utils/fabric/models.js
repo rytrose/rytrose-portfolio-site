@@ -9,12 +9,14 @@ export const GraffitiGroup = fabric.util.createClass(fabric.Group, {
     this.callSuper("initialize", objects, options);
     this.set("visitorID", options.visitorID || "");
     this.set("seed", options.seed || "");
-    this.set("brushWidth", options.brushWidth || 10);
+    this.set("brushRadius", options.brushRadius || 10);
     this.set("brushDensity", options.brushDensity || 10);
+    this.set("particleRadius", options.particleRadius || 1);
+    this.set("particleRadiusDeviation", options.particleRadiusDeviation || 5);
     this.set("color", options.color || "rgb(0,0,0)");
   },
   toObject: function () {
-    const { type, version, left, top, width, height, fill, opacity, objects } =
+    const { type, left, top, width, height, fill, objects } =
       this.callSuper("toObject");
     const reducedObjects = objects.reduce((reduced, current) => {
       if (reduced.length === 0) return [current];
@@ -38,8 +40,10 @@ export const GraffitiGroup = fabric.util.createClass(fabric.Group, {
     return {
       visitorID: this.get("visitorID"),
       seed: this.get("seed"),
-      brushWidth: this.get("brushWidth"),
+      brushRadius: this.get("brushRadius"),
       brushDensity: this.get("brushDensity"),
+      particleRadius: this.get("particleRadius"),
+      particleRadiusDeviation: this.get("particleRadiusDeviation"),
       color: this.get("color"),
       objects: reducedObjects,
       ...subset,
@@ -58,19 +62,23 @@ fabric.GraffitiGroup.fromObject = function (object, callback) {
   const rng = new Prando(object.seed);
   object.objects.forEach((spray) => {
     for (let i = 0; i < object.brushDensity; i++) {
+      const { x, y } = randomXY(
+        { x: spray.pX, y: spray.pY },
+        object.brushRadius,
+        rng.next(),
+        rng.next()
+      );
       reconstructedObjects.push({
         type: "graffitiParticle",
         version: "5.2.4", // TODO: figure out what to do with version
-        left: rng.nextInt(
-          spray.pX - object.brushWidth / 2,
-          spray.pX + object.brushWidth / 2
-        ),
-        top: rng.nextInt(
-          spray.pY - object.brushWidth / 2,
-          spray.pY + object.brushWidth / 2
-        ),
+        left: x,
+        top: y,
         fill: object.color,
-        radius: 1, // TODO: fix and/or use RNG
+        radius: randomRadius(
+          object.particleRadius,
+          object.particleRadiusDeviation,
+          rng.next()
+        ),
         ...spray,
       });
     }
@@ -78,16 +86,17 @@ fabric.GraffitiGroup.fromObject = function (object, callback) {
 
   fabric.util.enlivenObjects(reconstructedObjects, function (enlivenedObjects) {
     delete object.objects;
-    callback(
-      new fabric.GraffitiGroup(enlivenedObjects, {
-        visitorID: object.visitorID,
-        seed: object.seed,
-        brushWidth: object.brushWidth,
-        brushDensity: object.brushDensity,
-        color: object.color,
-        ...object,
-      })
-    );
+    const group = new fabric.GraffitiGroup(enlivenedObjects, {
+      visitorID: object.visitorID,
+      seed: object.seed,
+      brushRadius: object.brushRadius,
+      brushDensity: object.brushDensity,
+      particleRadius: object.particleRadius,
+      particleRadiusDeviation: object.particleRadiusDeviation,
+      color: object.color,
+      ...object,
+    });
+    callback(group);
   });
 };
 
@@ -127,14 +136,14 @@ fabric.GraffitiParticle.fromObject = function (object, callback) {
 export const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
   type: "graffitiBrush",
 
-  // TODO: consider making radius and have shape be circle
-  width: 10,
+  radius: 30,
 
   // TODO: consider making configurable
   density: 20,
 
-  // TODO: add random sizing
   particleRadius: 1,
+
+  particleRadiusDeviation: 5,
 
   initialize: function (canvas, visitorID) {
     this.canvas = canvas;
@@ -142,6 +151,7 @@ export const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     this.sprays = [];
     this.seed = undefined;
     this.rng = undefined;
+    this.last = { x: undefined, y: undefined };
   },
 
   onMouseDown: function (pointer) {
@@ -164,6 +174,12 @@ export const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     if (this.limitedToCanvasSize === true && this._isOutSideCanvas(pointer)) {
       return;
     }
+
+    // Lower fidelity on larger screens, with the added bonus of smaller
+    // numbers for serialization size
+    pointer = { x: +pointer.x.toFixed(2), y: +pointer.y.toFixed(2) };
+    if (this.last.x === pointer.x && this.last.y === pointer.y) return;
+    this.last = pointer;
 
     // Create and persist new spray
     const spray = this.addSpray(pointer);
@@ -200,8 +216,10 @@ export const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     const group = new GraffitiGroup(particles, {
       visitorID: this.visitorID,
       seed: this.seed,
-      brushWidth: this.width,
+      brushRadius: this.radius,
       brushDensity: this.density,
+      particleRadius: this.particleRadius,
+      particleRadiusDeviation: this.particleRadiusDeviation,
       // TODO: consider passing array of spray densities
       // to add RNG to density
       color: this.color,
@@ -251,20 +269,20 @@ export const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
   },
 
   addSpray: function (pointer) {
-    pointer.x = +pointer.x.toFixed(2);
-    pointer.y = +pointer.y.toFixed(2);
     const particles = [];
     for (const i = 0; i < this.density; i++) {
-      const x = this.rng.nextInt(
-        pointer.x - this.width / 2,
-        pointer.x + this.width / 2
-      );
-      const y = this.rng.nextInt(
-        pointer.y - this.width / 2,
-        pointer.y + this.width / 2
+      const { x, y } = randomXY(
+        pointer,
+        this.radius,
+        this.rng.next(),
+        this.rng.next()
       );
       let point = new fabric.Point(x, y);
-      point.radius = this.particleRadius;
+      point.radius = randomRadius(
+        this.particleRadius,
+        this.particleRadiusDeviation,
+        this.rng.next()
+      );
       point.pX = pointer.x;
       point.pY = pointer.y;
       particles.push(point);
@@ -273,3 +291,16 @@ export const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     return particles;
   },
 });
+
+const randomXY = (pointer, radius, rn1, rn2) => {
+  const r = radius * Math.sqrt(rn1);
+  const theta = rn2 * 2 * Math.PI;
+  return {
+    x: pointer.x + r * Math.cos(theta),
+    y: pointer.y + r * Math.sin(theta),
+  };
+};
+
+const randomRadius = (r, variation, rn) => {
+  return r + variation * rn;
+};
