@@ -2,11 +2,7 @@ import { fabric } from "fabric";
 import { useEffect, useRef, useCallback, useState } from "react";
 import useResizeObserver from "use-resize-observer";
 import useFabric from "../../hooks/useFabric";
-import {
-  GraffitiBrush,
-  GraffitiGroup,
-  GraffitiParticle,
-} from "../../utils/fabric/models";
+import GraffitiBrush from "../../utils/fabric/models/GraffitiBrush";
 
 const GraffitiCanvas = () => {
   const { canvasElRef, fabricCanvasRef } = useFabric({
