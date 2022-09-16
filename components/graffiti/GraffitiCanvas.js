@@ -2,7 +2,11 @@ import { fabric } from "fabric";
 import { useEffect, useRef, useCallback, useState } from "react";
 import useResizeObserver from "use-resize-observer";
 import useFabric from "../../hooks/useFabric";
-import { GraffitiGroup, GraffitiParticle } from "../../utils/fabric/models";
+import {
+  GraffitiBrush,
+  GraffitiGroup,
+  GraffitiParticle,
+} from "../../utils/fabric/models";
 
 const GraffitiCanvas = () => {
   const { canvasElRef, fabricCanvasRef } = useFabric({
@@ -58,77 +62,26 @@ const GraffitiCanvas = () => {
   useEffect(() => {
     if (!fabricCanvasRef.current) return;
     const canvas = fabricCanvasRef.current;
-    canvas.on("mouse:down", (options) => {
-      // Check if paint available
+    canvas.isDrawingMode = true;
+    canvas.freeDrawingBrush = new GraffitiBrush(canvas, "TODO: implement");
 
-      // Create new group
-      const group = new GraffitiGroup([], {
-        top: 0,
-        left: 0,
-        visitorID: `${Math.random()}`,
-      });
-      canvas.add(group);
-
-      groupRef.current = group;
-
-      // Start painting
-      paintingRef.current = true;
-    });
-
-    canvas.on("mouse:move", (event) => {
-      // Check if painting
-      if (!paintingRef.current) return;
-
-      // Check if paint available
-
-      // Sanity check group exists
-      if (!groupRef.current) return;
-      const group = groupRef.current;
-
-      // Check last paint time
-      if (Math.random() > 0.9) return;
-
-      // Create paint
-      const paint = new GraffitiParticle({
-        left: event.pointer.x,
-        top: event.pointer.y,
-        radius: 5 + Math.floor(Math.random() * 10),
-        fill: "blue",
-        originX: "center",
-        originY: "center",
-      });
-
-      // Add paint to group
-      group.addWithUpdate(paint);
-    });
-
-    canvas.on("mouse:up", (options) => {
-      // Check if was painting
-      if (!paintingRef.current) return;
-
-      // Stop painting
-      paintingRef.current = false;
-
+    canvas.on("mouse:up", (_) => {
       // Serialize canvas
       const serializedCanvas = JSON.stringify(canvas);
-      console.log(serializedCanvas);
+      setTimeout(() => {
+        canvas.clear();
+      }, 1000);
+
+      setTimeout(() => {
+        // TODO: figure out why this is messed up
+        console.log("loading from serialized");
+        canvas.loadFromJSON(serializedCanvas);
+        console.log(serializedCanvas);
+      }, 2000);
 
       // Send canvas to audio pipeline
       // Post update to canvas
     });
-
-    canvas.on("mouse:out", (options) => {
-      // Check if was painting
-      // Stop painting
-    });
-
-    /*
-      TODO:
-        - On touchdown/clickdown create Group size == canvas
-        - On drag, use canvas position to spawn circles/shapes "paint", add to Group
-        - Subtract area of painted shapes from user's available "paint"
-        - Stop adding when touchup or user is out of "paint"
-    */
   }, [fabricCanvasRef, paintingRef, groupRef]);
 
   return (

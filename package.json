@@ -14,6 +14,7 @@
     "fabric": "^5.2.4",
     "js-yaml": "^4.1.0",
     "next": "^12.2.5",
+    "prando": "^6.0.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "use-resize-observer": "^9.0.2"
