@@ -12,26 +12,36 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
   // TODO: consider making configurable
   density: 20,
 
+  particleOpacity: 1,
+
   particleRadius: 1,
 
-  particleRadiusDeviation: 5,
+  particleRadiusDeviation: 0,
 
-  initialize: function (canvas, visitorID) {
+  initialize: function (canvas, visitorID, paintRef, updatePaint) {
     this.canvas = canvas;
     this.visitorID = visitorID;
     this.sprays = [];
+    this.paintRef = paintRef;
+    this.updatePaint = updatePaint;
     this.seed = undefined;
     this.rng = undefined;
     this.last = { x: undefined, y: undefined };
   },
 
   onMouseDown: function (pointer) {
-    // Reset sprays for new interation
+    // Reset sprays for new iteration
     this.sprays.length = 0;
     this.canvas.clearContext(this.canvas.contextTop);
 
+    // TODO: callback to notify out of paint
+    if (!this.canSpray()) {
+      console.log("not enough paint:", this.paintRef.current);
+      return;
+    }
+
     // Set RNG
-    this.seed = `${this.visitorID}${Date.now()}`;
+    this.seed = `${this.visitorID}-${Date.now()}`;
     this.rng = new Prando(this.seed);
 
     // Create and persist new spray
@@ -45,6 +55,9 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     if (this.limitedToCanvasSize === true && this._isOutSideCanvas(pointer)) {
       return;
     }
+
+    // TODO: callback to notify out of paint
+    if (!this.canSpray()) return;
 
     // Lower fidelity on larger screens, with the added bonus of smaller
     // numbers for serialization size
@@ -78,10 +91,13 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
           originX: "center",
           originY: "center",
           fill: this.color,
+          opacity: this.particleOpacity,
         });
         particles.push(particle);
       }
     }
+
+    if (particles.length === 0) return;
 
     // Add objects to group
     const group = new GraffitiGroup(particles, {
@@ -89,6 +105,7 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
       seed: this.seed,
       brushRadius: this.radius,
       brushDensity: this.density,
+      particleOpacity: this.particleOpacity,
       particleRadius: this.particleRadius,
       particleRadiusDeviation: this.particleRadiusDeviation,
       // TODO: consider passing array of spray densities
@@ -108,6 +125,7 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
   },
 
   particle: function (ctx, point) {
+    ctx.globalAlpha = this.particleOpacity;
     ctx.fillStyle = this.color;
     ctx.beginPath();
     ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2, false);
@@ -121,9 +139,6 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     this._saveAndTransform(ctx);
     for (let i = 0; i < spray.length; i++) {
       const point = spray[i];
-      if (typeof point.opacity !== "undefined") {
-        ctx.globalAlpha = point.opacity;
-      }
       this.particle(ctx, point);
     }
     ctx.restore();
@@ -141,6 +156,7 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
 
   addSpray: function (pointer) {
     const particles = [];
+    let paint = 0;
     for (let i = 0; i < this.density; i++) {
       const { x, y } = randomXY(
         pointer,
@@ -154,12 +170,30 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
         this.particleRadiusDeviation,
         this.rng.next()
       );
+      paint += Math.PI * Math.pow(point.radius, 2);
       point.pX = pointer.x;
       point.pY = pointer.y;
       particles.push(point);
     }
     this.sprays.push(particles);
+    this.deductPaint(paint);
     return particles;
+  },
+
+  maxPaintPerSpray: function () {
+    return (
+      this.density *
+      (Math.PI *
+        Math.pow(this.particleRadius + this.particleRadiusDeviation, 2))
+    );
+  },
+
+  canSpray: function () {
+    return this.paintRef.current > this.maxPaintPerSpray();
+  },
+
+  deductPaint: function (paint) {
+    this.updatePaint(this.paintRef.current - paint);
   },
 });
 

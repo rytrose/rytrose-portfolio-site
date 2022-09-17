@@ -12,12 +12,12 @@ const GraffitiGroup = fabric.util.createClass(fabric.Group, {
     this.set("seed", options.seed || "");
     this.set("brushRadius", options.brushRadius || 10);
     this.set("brushDensity", options.brushDensity || 10);
+    this.set("particleOpacity", options.particleOpacity || 1);
     this.set("particleRadius", options.particleRadius || 1);
-    this.set("particleRadiusDeviation", options.particleRadiusDeviation || 5);
+    this.set("particleRadiusDeviation", options.particleRadiusDeviation || 0);
     this.set("color", options.color || "rgb(0,0,0)");
   },
   toObject: function () {
-    console.log(this.objects);
     const { type, left, top, width, height, fill, objects } =
       this.callSuper("toObject");
     const reducedObjects = objects.reduce((reduced, current) => {
@@ -44,6 +44,7 @@ const GraffitiGroup = fabric.util.createClass(fabric.Group, {
       seed: this.get("seed"),
       brushRadius: this.get("brushRadius"),
       brushDensity: this.get("brushDensity"),
+      particleOpacity: this.get("particleOpacity"),
       particleRadius: this.get("particleRadius"),
       particleRadiusDeviation: this.get("particleRadiusDeviation"),
       color: this.get("color"),
@@ -73,6 +74,7 @@ fabric.GraffitiGroup.fromObject = function (object, callback) {
         left: x,
         top: y,
         fill: object.color,
+        opacity: object.particleOpacity,
         radius: randomRadius(
           object.particleRadius,
           object.particleRadiusDeviation,
@@ -90,6 +92,7 @@ fabric.GraffitiGroup.fromObject = function (object, callback) {
       seed: object.seed,
       brushRadius: object.brushRadius,
       brushDensity: object.brushDensity,
+      particleOpacity: object.particleOpacity,
       particleRadius: object.particleRadius,
       particleRadiusDeviation: object.particleRadiusDeviation,
       color: object.color,
