@@ -18,14 +18,23 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
 
   particleRadiusDeviation: 0,
 
-  initialize: function (canvas, visitorID, paintRef, updatePaint) {
+  initialize: function (
+    canvas,
+    visitorRef,
+    cursorRef,
+    updatePaint,
+    setLastPainted
+  ) {
     this.canvas = canvas;
-    this.visitorID = visitorID;
     this.sprays = [];
-    this.paintRef = paintRef;
+    this.visitorRef = visitorRef;
+    this.visitorID = visitorRef.current.id;
+    this.cursorRef = cursorRef;
     this.updatePaint = updatePaint;
+    this.setLastPainted = setLastPainted;
     this.seed = undefined;
     this.rng = undefined;
+    this.painting = false;
     this.last = { x: undefined, y: undefined };
   },
 
@@ -36,9 +45,11 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
 
     // TODO: callback to notify out of paint
     if (!this.canSpray()) {
-      console.log("not enough paint:", this.paintRef.current);
       return;
     }
+
+    // Mark painting
+    this.painting = true;
 
     // Set RNG
     this.seed = `${this.visitorID}-${Date.now()}`;
@@ -52,12 +63,23 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
   },
 
   onMouseMove: function (pointer) {
-    if (this.limitedToCanvasSize === true && this._isOutSideCanvas(pointer)) {
+    if (
+      !this.painting ||
+      (this.limitedToCanvasSize === true && this._isOutSideCanvas(pointer))
+    ) {
       return;
     }
 
     // TODO: callback to notify out of paint
-    if (!this.canSpray()) return;
+    if (!this.canSpray()) {
+      // Don't allow painting to continue in this stroke if ran out of paint
+      this.painting = false;
+      // Set paint to zero to display paint as fully run out
+      this.updatePaint(0);
+      // Set last painted time to update paint refill
+      this.setLastPainted();
+      return;
+    }
 
     // Lower fidelity on larger screens, with the added bonus of smaller
     // numbers for serialization size
@@ -73,6 +95,9 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
   },
 
   onMouseUp: function () {
+    this.painting = false;
+    this.setLastPainted();
+
     // Store and clear renderOnAddRemove
     const originalRenderOnAddRemove = this.canvas.renderOnAddRemove;
     this.canvas.renderOnAddRemove = false;
@@ -189,11 +214,11 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
   },
 
   canSpray: function () {
-    return this.paintRef.current > this.maxPaintPerSpray();
+    return this.visitorRef.current.paint > this.maxPaintPerSpray();
   },
 
   deductPaint: function (paint) {
-    this.updatePaint(this.paintRef.current - paint);
+    this.updatePaint(this.visitorRef.current.paint - paint);
   },
 });
 

@@ -1,4 +1,4 @@
-import { useReducer, useEffect } from "react";
+import { useReducer, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { isEmpty } from "../utils/object";
 
@@ -15,6 +15,8 @@ const reducer = (visitor, action) => {
       return { ...visitor, id: action.id };
     case "setPaint":
       return { ...visitor, paint: action.paint };
+    case "setLastPainted":
+      return { ...visitor, lastPainted: action.lastPainted };
     case "test":
       return { ...visitor, test: "" };
     default:
@@ -24,6 +26,7 @@ const reducer = (visitor, action) => {
 
 const useVisitor = () => {
   const [visitor, dispatch] = useReducer(reducer, {});
+  const visitorRef = useRef();
 
   useEffect(() => {
     const stored = localStorage.getItem(VISITOR_KEY);
@@ -35,11 +38,12 @@ const useVisitor = () => {
   }, []);
 
   useEffect(() => {
+    visitorRef.current = visitor;
     if (isEmpty(visitor)) return;
     localStorage.setItem(VISITOR_KEY, JSON.stringify(visitor));
   }, [visitor]);
 
-  return [visitor, dispatch];
+  return [visitor, visitorRef, dispatch];
 };
 
 export default useVisitor;
