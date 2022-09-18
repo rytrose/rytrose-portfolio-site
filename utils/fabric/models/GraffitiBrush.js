@@ -7,15 +7,13 @@ import GraffitiParticle from "./GraffitiParticle";
 const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
   type: "graffitiBrush",
 
+  // TODO: Make radius and density configurable and inversely proportional,
+  // removing density as a property
   radius: 30,
-
-  // TODO: consider making configurable
   density: 20,
 
   particleOpacity: 1,
-
   particleRadius: 1,
-
   particleRadiusDeviation: 0,
 
   initialize: function (
@@ -138,12 +136,10 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
       color: this.color,
     });
 
-    // Fire events and add to canvas
-    this.canvas.fire("before:path:created", { path: group });
+    // Add to canvas
     this.canvas.add(group);
-    this.canvas.fire("path:created", { path: group });
 
-    // Render objetcts
+    // Render objects
     this.canvas.clearContext(this.canvas.contextTop);
     this.canvas.renderOnAddRemove = originalRenderOnAddRemove;
     this.canvas.requestRenderAll();

@@ -2,6 +2,7 @@ import { fabric } from "fabric";
 import { useEffect, useRef, useCallback, useMemo } from "react";
 import useResizeObserver from "use-resize-observer";
 import useFabric from "../../hooks/useFabric";
+import useKeyPress from "../../hooks/useKeyPress";
 import useVisitor from "../../hooks/useVisitor";
 import GraffitiBrush from "../../utils/fabric/models/GraffitiBrush";
 import ProgressBar from "../ProgressBar";
@@ -36,6 +37,7 @@ const GraffitiCanvas = () => {
       stroke: "rgb(226,232,240)",
       originX: "center",
       originY: "center",
+      excludeFromExport: true,
     })
   );
 
@@ -189,6 +191,7 @@ const GraffitiCanvas = () => {
     setLastPainted,
   ]);
 
+  // Setus up paint refill
   useEffect(() => {
     const interval = setInterval(() => {
       // Don't fill up the paint while actively painting
@@ -215,6 +218,37 @@ const GraffitiCanvas = () => {
       clearInterval(interval);
     };
   }, [fabricCanvasRef, visitorRef, updatePaint]);
+
+  // Sets up undo/redo
+  const stackRef = useRef([]);
+  useKeyPress(
+    useCallback((e) => {
+      return e.code === "KeyZ" && !e.shiftKey && e.metaKey;
+    }, []),
+    useCallback(() => {
+      const canvas = fabricCanvasRef.current;
+      const stack = stackRef.current;
+      const groups = canvas.getObjects("graffitiGroup");
+      if (groups.length === 0) return;
+      const last = groups.pop();
+      stack.push(last);
+      stackRef.current = stack;
+      canvas.remove(last);
+    }, [fabricCanvasRef])
+  );
+  useKeyPress(
+    useCallback((e) => {
+      return e.code === "KeyZ" && e.shiftKey && e.metaKey;
+    }, []),
+    useCallback(() => {
+      const canvas = fabricCanvasRef.current;
+      const stack = stackRef.current;
+      if (stack.length === 0) return;
+      const last = stack.pop();
+      stackRef.current = stack;
+      canvas.add(last);
+    }, [fabricCanvasRef])
+  );
 
   return (
     <>
