@@ -5,6 +5,7 @@ import useFabric from "../../hooks/useFabric";
 import useKeyPress from "../../hooks/useKeyPress";
 import useVisitor from "../../hooks/useVisitor";
 import GraffitiBrush from "../../utils/fabric/models/GraffitiBrush";
+import Button from "../Button";
 import ProgressBar from "../ProgressBar";
 
 const MAX_PAINT = 40000;
@@ -13,12 +14,23 @@ const TOTAL_REFILL_TIME_MS = 30 * 1000; // 10 seconds
 const REFILL_INTERVAL_MS = 1000 / 60;
 
 const GraffitiCanvas = () => {
-  // Ref for the div containing the canvas
-  const divRef = useRef();
   // Visior state
   const [visitor, visitorRef, visitorDispatch] = useVisitor();
 
+  // Update visitor paint to max paint if unset
+  useEffect(() => {
+    let paint = visitor?.paint;
+    if (paint === -1) {
+      paint = MAX_PAINT;
+      visitorDispatch({ type: "setPaint", paint: MAX_PAINT });
+    }
+  }, [visitor.paint, visitorDispatch]);
+
+  // Ref for the div containing the canvas
+  const divRef = useRef();
   // Options for the fabric canvas. Must be memoized otherwise
+  // the callback ref will change on every render and the canvas
+  // will be continuously disposed and recreated.
   const fabricOptions = useMemo(
     () => ({
       isDrawingMode: true,
@@ -27,21 +39,8 @@ const GraffitiCanvas = () => {
     []
   );
   const [canvasElRef, fabricCanvasRef] = useFabric(fabricOptions);
-  const cursorRef = useRef(
-    new fabric.Circle({
-      // Start cursor off-screen
-      left: -100,
-      top: -100,
-      radius: 0,
-      fill: undefined,
-      stroke: "rgb(226,232,240)",
-      originX: "center",
-      originY: "center",
-      excludeFromExport: true,
-    })
-  );
 
-  // Resizes the canvas responsively.
+  // Resizes the canvas responsively
   const onDivResize = useCallback(
     (size) => {
       if (!size) return;
@@ -55,7 +54,7 @@ const GraffitiCanvas = () => {
       let scale, zoom, width, height;
 
       // If setting the height to max width would make it taller than the container,
-      // use the container height instead to prevent scrolling.
+      // use the container height instead to prevent scrolling
       if (maxWidthHeight > containerHeight) {
         scale = containerHeight / canvas.getHeight();
         zoom = canvas.getZoom() * scale;
@@ -77,23 +76,28 @@ const GraffitiCanvas = () => {
     [fabricCanvasRef]
   );
 
-  // Calls the canvas resizing callback whenever the canvas
-  // div's size changes.
+  // Calls the canvas resizing callback whenever the canvas div's size changes
   useResizeObserver({
     ref: divRef,
     onResize: onDivResize,
   });
 
-  // Update unset paint to max paint.
-  useEffect(() => {
-    let paint = visitor?.paint;
-    if (paint === -1) {
-      paint = MAX_PAINT;
-      visitorDispatch({ type: "setPaint", paint: MAX_PAINT });
-    }
-  }, [visitor.paint, visitorDispatch]);
+  // Creates the brush cursor
+  const cursorRef = useRef(
+    new fabric.Circle({
+      // Start cursor off-screen
+      left: -100,
+      top: -100,
+      radius: 0,
+      fill: undefined,
+      stroke: "rgb(226,232,240)",
+      originX: "center",
+      originY: "center",
+      excludeFromExport: true,
+    })
+  );
 
-  // Sets up the canvas event handlers.
+  // Sets up the canvas event handlers
   useEffect(() => {
     // Setup canvas
     const canvas = fabricCanvasRef.current;
@@ -110,11 +114,9 @@ const GraffitiCanvas = () => {
       // setTimeout(() => {
       //   canvas.loadFromJSON(serializedCanvas);
       // }, 2000);
-
-      // Send canvas to audio pipeline
-      // Post update to canvas
     });
 
+    // Updates the brush cursor
     canvas.on("mouse:move", (event) => {
       const cursor = cursorRef.current;
       const { x, y } = canvas.getPointer(event.e);
@@ -128,6 +130,7 @@ const GraffitiCanvas = () => {
       canvas.requestRenderAll();
     });
 
+    // Hides the brush cursor
     canvas.on(
       "mouse:out",
       (_) => {
@@ -142,10 +145,20 @@ const GraffitiCanvas = () => {
       },
       [fabricCanvasRef, cursorRef]
     );
+
+    // When graffiti groups are changed, updates the audio pipeline
+    const updateGroups = (e) => {
+      if (e.target.type === "graffitiGroup") {
+        const groups = canvas.getObjects("graffitiGroup");
+        // TODO: send to audio pipeline
+      }
+    };
+    canvas.on("object:added", updateGroups);
+    canvas.on("object:removed", updateGroups);
   }, [fabricCanvasRef, cursorRef, visitorRef, visitorDispatch]);
 
-  // Dispatches an update to visitor.paint, to be used in the
-  // fabric objects.
+  // Dispatches an update to visitor.paint. This callback will be
+  // called from the fabric objects.
   const updatePaint = useCallback(
     (paint) => {
       visitorDispatch({ type: "setPaint", paint: paint });
@@ -153,6 +166,8 @@ const GraffitiCanvas = () => {
     [visitorDispatch]
   );
 
+  // Stores that last time paint was used to determine the current
+  // value for paint after refilling over time
   const setLastPainted = useCallback(() => {
     visitorDispatch({
       type: "setLastPainted",
@@ -163,7 +178,7 @@ const GraffitiCanvas = () => {
     });
   }, [visitorRef, visitorDispatch]);
 
-  // Sets up the graffiti brush.
+  // Sets up the graffiti brush
   useEffect(() => {
     if (typeof visitor.id === "undefined") return;
     const canvas = fabricCanvasRef.current;
@@ -268,6 +283,13 @@ const GraffitiCanvas = () => {
         progressColor="#11660e"
         progress={(visitor.paint / MAX_PAINT) * 100}
       />
+      <div className="flex grow justify-center my-4">
+        {/* TODO: 
+          - only refill paint when no staged changes
+          - update global canvas when committed
+        */}
+        <Button border>commit</Button>
+      </div>
     </>
   );
 };
