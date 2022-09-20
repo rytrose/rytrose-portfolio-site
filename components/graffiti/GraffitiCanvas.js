@@ -269,7 +269,7 @@ const GraffitiCanvas = () => {
     <>
       <div
         ref={divRef}
-        className="flex justify-center sm:h-[100vh] sm:max-h-[calc(100vh-162px)]"
+        className="flex justify-center sm:h-[100vh] sm:max-h-[calc(100vh-162px-32px-56px)]"
       >
         <canvas
           className="border border-slate-200"
@@ -278,12 +278,14 @@ const GraffitiCanvas = () => {
           height={500}
         />
       </div>
-      <ProgressBar
-        className="h-4 my-4"
-        progressColor="#11660e"
-        progress={(visitor.paint / MAX_PAINT) * 100}
-      />
-      <div className="flex grow justify-center my-4">
+      <div className="flex justify-center">
+        <ProgressBar
+          className="h-4 mt-4 max-w-[75%]"
+          progressColor="#11660e"
+          progress={(visitor.paint / MAX_PAINT) * 100}
+        />
+      </div>
+      <div className="flex justify-center my-4">
         {/* TODO: 
           - only refill paint when no staged changes
           - update global canvas when committed
