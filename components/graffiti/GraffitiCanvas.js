@@ -266,11 +266,22 @@ const GraffitiCanvas = () => {
   );
 
   return (
-    <>
-      <div
-        ref={divRef}
-        className="flex justify-center sm:h-[100vh] sm:max-h-[calc(100vh-162px-32px-56px)]"
-      >
+    <div className="flex flex-col sm:h-[100vh] sm:max-h-[calc(100vh-162px-24px-48px)]">
+      <div className="flex justify-center">
+        {/* TODO:
+          - only refill paint when no staged changes
+          - update global canvas when committed
+        */}
+        <Button border>commit</Button>
+      </div>
+      <div className="flex justify-center">
+        <ProgressBar
+          className="h-4 my-4 2xl:max-w-[50%]"
+          progressColor="#11660e"
+          progress={(visitor.paint / MAX_PAINT) * 100}
+        />
+      </div>
+      <div ref={divRef} className="flex grow justify-center">
         <canvas
           className="border border-slate-200"
           ref={canvasElRef}
@@ -278,21 +289,7 @@ const GraffitiCanvas = () => {
           height={500}
         />
       </div>
-      <div className="flex justify-center">
-        <ProgressBar
-          className="h-4 mt-4 max-w-[75%]"
-          progressColor="#11660e"
-          progress={(visitor.paint / MAX_PAINT) * 100}
-        />
-      </div>
-      <div className="flex justify-center my-4">
-        {/* TODO: 
-          - only refill paint when no staged changes
-          - update global canvas when committed
-        */}
-        <Button border>commit</Button>
-      </div>
-    </>
+    </div>
   );
 };
 
