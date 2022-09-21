@@ -16,20 +16,13 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
   particleRadius: 1,
   particleRadiusDeviation: 0,
 
-  initialize: function (
-    canvas,
-    visitorRef,
-    cursorRef,
-    updatePaint,
-    setLastPainted
-  ) {
+  initialize: function (canvas, visitorRef, cursorRef, updatePaint) {
     this.canvas = canvas;
     this.sprays = [];
     this.visitorRef = visitorRef;
     this.visitorID = visitorRef.current.id;
     this.cursorRef = cursorRef;
     this.updatePaint = updatePaint;
-    this.setLastPainted = setLastPainted;
     this.seed = undefined;
     this.rng = undefined;
     this.painting = false;
@@ -74,8 +67,6 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
       this.painting = false;
       // Set paint to zero to display paint as fully run out
       this.updatePaint(0);
-      // Set last painted time to update paint refill
-      this.setLastPainted();
       return;
     }
 
@@ -94,7 +85,6 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
 
   onMouseUp: function () {
     this.painting = false;
-    this.setLastPainted();
 
     // Store and clear renderOnAddRemove
     const originalRenderOnAddRemove = this.canvas.renderOnAddRemove;
@@ -201,6 +191,9 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     return particles;
   },
 
+  // Due to RNG in how much paint a single spray actually uses,
+  // compute the maximum amount of paint per spray to check against
+  // when determining if the visitor is out of paint.
   maxPaintPerSpray: function () {
     return (
       this.density *

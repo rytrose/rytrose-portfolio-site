@@ -1,5 +1,5 @@
 import { fabric } from "fabric";
-import { useEffect, useRef, useCallback, useMemo } from "react";
+import { useEffect, useRef, useCallback, useMemo, useState } from "react";
 import useResizeObserver from "use-resize-observer";
 import useFabric from "../../hooks/useFabric";
 import useKeyPress from "../../hooks/useKeyPress";
@@ -14,8 +14,11 @@ const TOTAL_REFILL_TIME_MS = 30 * 1000; // 10 seconds
 const REFILL_INTERVAL_MS = 1000 / 60;
 
 const GraffitiCanvas = () => {
-  // Visior state
+  // Visitor state
   const [visitor, visitorRef, visitorDispatch] = useVisitor();
+
+  // Graffiti groups added to the canvas that haven't yet been committed
+  const stagedGroupsRef = useRef([]);
 
   // Update visitor paint to max paint if unset
   useEffect(() => {
@@ -147,15 +150,39 @@ const GraffitiCanvas = () => {
     );
 
     // When graffiti groups are changed, updates the audio pipeline
-    const updateGroups = (e) => {
+    const updateAudioForGroups = (e) => {
       if (e.target.type === "graffitiGroup") {
         const groups = canvas.getObjects("graffitiGroup");
         // TODO: send to audio pipeline
       }
     };
-    canvas.on("object:added", updateGroups);
-    canvas.on("object:removed", updateGroups);
-  }, [fabricCanvasRef, cursorRef, visitorRef, visitorDispatch]);
+    canvas.on("object:added", updateAudioForGroups);
+    canvas.on("object:removed", updateAudioForGroups);
+
+    // Add new group to staged groups
+    canvas.on("object:added", (e) => {
+      if (e.target.type === "graffitiGroup") {
+        stagedGroupsRef.current.push(e.target);
+      }
+    });
+
+    // Remove group from staged groups
+    canvas.on("object:removed", (e) => {
+      const stagedGroups = stagedGroupsRef.current;
+      if (e.target.type === "graffitiGroup") {
+        const i = stagedGroups.indexOf(e.target);
+        if (i >= 0) {
+          stagedGroups.splice(i, 1);
+        }
+      }
+    });
+  }, [
+    fabricCanvasRef,
+    cursorRef,
+    visitorRef,
+    visitorDispatch,
+    stagedGroupsRef,
+  ]);
 
   // Dispatches an update to visitor.paint. This callback will be
   // called from the fabric objects.
@@ -182,13 +209,7 @@ const GraffitiCanvas = () => {
   useEffect(() => {
     if (typeof visitor.id === "undefined") return;
     const canvas = fabricCanvasRef.current;
-    const brush = new GraffitiBrush(
-      canvas,
-      visitorRef,
-      cursorRef,
-      updatePaint,
-      setLastPainted
-    );
+    const brush = new GraffitiBrush(canvas, visitorRef, cursorRef, updatePaint);
     window.brush = brush;
     brush.radius = 10;
     cursorRef.current.set({ radius: 10 });
@@ -197,14 +218,7 @@ const GraffitiCanvas = () => {
     brush.particleOpacity = 0.5;
     brush.particleRadiusDeviation = 6;
     canvas.freeDrawingBrush = brush;
-  }, [
-    fabricCanvasRef,
-    visitorRef,
-    cursorRef,
-    visitor.id,
-    updatePaint,
-    setLastPainted,
-  ]);
+  }, [fabricCanvasRef, visitorRef, cursorRef, visitor.id, updatePaint]);
 
   // Setus up paint refill
   useEffect(() => {
@@ -213,26 +227,35 @@ const GraffitiCanvas = () => {
       const canvas = fabricCanvasRef.current;
       if (canvas.freeDrawingBrush.painting) return;
 
+      // Don't fill up paint if there are staged groups
+      const stagedGroups = stagedGroupsRef.current;
+      if (stagedGroups.length > 0) return;
+
+      // Ensure visitor state is loaded before trying to fill paint
       const paint = visitorRef.current?.paint;
       if (typeof paint === "undefined") return;
+
+      // Don't fill past max paint
       if (paint === MAX_PAINT) return;
 
+      // If no last painted, there is not any paint to fill
       const lastPainted = visitorRef.current?.lastPainted;
       if (typeof lastPainted === "undefined") return;
 
+      // Compute the new paint value given a rate of fill
+      // and the time since we started filling (after the last paint)
       const newPaint = Math.min(
         lastPainted.paint +
           (MAX_PAINT / TOTAL_REFILL_TIME_MS) * (Date.now() - lastPainted.t),
         MAX_PAINT
       );
-
       updatePaint(newPaint);
     }, REFILL_INTERVAL_MS);
 
     return () => {
       clearInterval(interval);
     };
-  }, [fabricCanvasRef, visitorRef, updatePaint]);
+  }, [fabricCanvasRef, visitorRef, stagedGroupsRef, updatePaint]);
 
   // Sets up undo/redo
   const stackRef = useRef([]);
@@ -243,13 +266,20 @@ const GraffitiCanvas = () => {
     useCallback(() => {
       const canvas = fabricCanvasRef.current;
       const stack = stackRef.current;
+      const visitor = visitorRef.current;
+      const stagedGroups = stagedGroupsRef.current;
       const groups = canvas.getObjects("graffitiGroup");
       if (groups.length === 0) return;
       const last = groups.pop();
+      if (!stagedGroups.includes(last)) {
+        // Don't undo unstaged groups
+        groups.push(last);
+        return;
+      }
       stack.push(last);
-      stackRef.current = stack;
       canvas.remove(last);
-    }, [fabricCanvasRef])
+      updatePaint(visitor.paint + last.computePaint());
+    }, [fabricCanvasRef, visitorRef, stackRef, stagedGroupsRef, updatePaint])
   );
   useKeyPress(
     useCallback((e) => {
@@ -258,12 +288,32 @@ const GraffitiCanvas = () => {
     useCallback(() => {
       const canvas = fabricCanvasRef.current;
       const stack = stackRef.current;
+      const visitor = visitorRef.current;
       if (stack.length === 0) return;
       const last = stack.pop();
-      stackRef.current = stack;
+      if (visitor.paint < last.computePaint()) {
+        // Not enough paint to redo
+        // TODO: alert user
+        stack.push(last);
+        return;
+      }
       canvas.add(last);
-    }, [fabricCanvasRef])
+      updatePaint(visitor.paint - last.computePaint());
+    }, [fabricCanvasRef, visitorRef, stackRef, updatePaint])
   );
+
+  const commitChanges = useCallback(() => {
+    // Update the timestamp of most recent change
+    setLastPainted();
+
+    // Clear the staged groups
+    stagedGroupsRef.current = [];
+
+    // Clear the undo/redo stack
+    stackRef.current = [];
+
+    // TODO: submit updates to canvas
+  }, [stagedGroupsRef, stackRef, setLastPainted]);
 
   return (
     <div className="flex flex-col sm:h-[100vh] sm:max-h-[calc(100vh-162px-24px-48px)]">
@@ -272,11 +322,13 @@ const GraffitiCanvas = () => {
           - only refill paint when no staged changes
           - update global canvas when committed
         */}
-        <Button border>commit</Button>
+        <Button border onClick={commitChanges}>
+          commit
+        </Button>
       </div>
       <div className="flex justify-center">
         <ProgressBar
-          className="h-4 my-4 2xl:max-w-[50%]"
+          className="h-4 my-4 xl:max-w-[50%]"
           progressColor="#11660e"
           progress={(visitor.paint / MAX_PAINT) * 100}
         />

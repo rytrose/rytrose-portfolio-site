@@ -4,6 +4,9 @@ import { randomXY, randomRadius } from "../utils";
 
 const GraffitiGroup = fabric.util.createClass(fabric.Group, {
   type: "graffitiGroup",
+  hasControls: false,
+  selectable: false,
+  hoverCursor: "auto",
   initialize: function (objects, options) {
     options || (options = {});
 
@@ -52,9 +55,13 @@ const GraffitiGroup = fabric.util.createClass(fabric.Group, {
       ...subset,
     };
   },
-  hasControls: false,
-  selectable: false,
-  hoverCursor: "auto",
+  computePaint: function () {
+    let paint = 0;
+    for (let particle of this._objects) {
+      paint += Math.PI * Math.pow(particle.radius, 2);
+    }
+    return paint;
+  },
 });
 fabric.GraffitiGroup = GraffitiGroup;
 fabric.GraffitiGroup.fromObject = function (object, callback) {
