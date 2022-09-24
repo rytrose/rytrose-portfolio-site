@@ -1,5 +1,6 @@
 import { fabric } from "fabric";
 import Prando from "prando";
+import { denormalizeToRange, quantize } from "../../normalize";
 import { randomXY, randomRadius } from "../utils";
 import GraffitiGroup from "./GraffitiGroup";
 import GraffitiParticle from "./GraffitiParticle";
@@ -27,6 +28,72 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     this.rng = undefined;
     this.painting = false;
     this.last = { x: undefined, y: undefined };
+  },
+
+  // value should between 0-1
+  setBrushSize: function (value) {
+    // TODO: set brush radius, then
+    // derive particle radius, opacity, density
+    const minRadius = 4;
+    const maxRadius = 50;
+    const radius = denormalizeToRange(value, minRadius, maxRadius);
+
+    const minParticleRadius = 0.75;
+    const maxParticleRadius = 1.25;
+    const particleRadius = denormalizeToRange(
+      value,
+      maxParticleRadius,
+      minParticleRadius
+    );
+
+    const minParticleRadiusDeviation = 0;
+    const maxParticleRadiusDeviation = 6;
+    const denormalizedParticleRadiusDeviation = denormalizeToRange(
+      value,
+      minParticleRadiusDeviation,
+      maxParticleRadiusDeviation
+    );
+    let particleRadiusDeviation = 0;
+    if (value < 0.5) {
+      particleRadiusDeviation = denormalizedParticleRadiusDeviation;
+    } else {
+      particleRadiusDeviation =
+        maxParticleRadiusDeviation - denormalizedParticleRadiusDeviation;
+    }
+    const denormalizedDensity = denormalizeToRange(value, 6, 40);
+    const density = quantize(
+      denormalizedDensity,
+      Array.from({ length: 40 }, (_, i) => i + 1)
+    );
+
+    const minParticleOpacity = 0.25;
+    const maxParticleOpacity = 0.9;
+    const particleOpacity = denormalizeToRange(
+      value,
+      maxParticleOpacity,
+      minParticleOpacity
+    );
+
+    this.radius = radius;
+    this.particleRadius = particleRadius;
+    this.particleRadiusDeviation = particleRadiusDeviation;
+    this.density = density;
+    this.particleOpacity = particleOpacity;
+
+    console.log(
+      "radius",
+      this.radius,
+      "particleRadius",
+      this.particleRadius,
+      "particleRadiusDeviation",
+      this.particleRadiusDeviation,
+      "density",
+      this.density,
+      "particleOpacity",
+      this.particleOpacity
+    );
+
+    return radius;
   },
 
   onMouseDown: function (pointer) {

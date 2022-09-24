@@ -1,5 +1,6 @@
 import { fabric } from "fabric";
 import { useEffect, useRef, useCallback, useMemo, useState } from "react";
+import ReactSlider from "react-slider";
 import useResizeObserver from "use-resize-observer";
 import useFabric from "../../hooks/useFabric";
 import useKeyPress from "../../hooks/useKeyPress";
@@ -210,15 +211,27 @@ const GraffitiCanvas = () => {
     if (typeof visitor.id === "undefined") return;
     const canvas = fabricCanvasRef.current;
     const brush = new GraffitiBrush(canvas, visitorRef, cursorRef, updatePaint);
-    window.brush = brush;
-    brush.radius = 10;
-    cursorRef.current.set({ radius: 10 });
+    const newSize = brush.setBrushSize(0.5);
+    cursorRef.current.set({ radius: newSize });
     brush.color = "green";
-    brush.density = 4;
-    brush.particleOpacity = 0.5;
-    brush.particleRadiusDeviation = 6;
+    // brush.radius = 4;
+    // cursorRef.current.set({ radius: 50 });
+    // brush.density = 4;
+    // brush.particleOpacity = 0.5;
+    // brush.particleRadiusDeviation = 6;
     canvas.freeDrawingBrush = brush;
   }, [fabricCanvasRef, visitorRef, cursorRef, visitor.id, updatePaint]);
+
+  const onBrushResize = useCallback(
+    (value) => {
+      const canvas = fabricCanvasRef.current;
+      const brush = canvas.freeDrawingBrush;
+      if (brush.type !== "graffitiBrush") return;
+      const newSize = brush.setBrushSize(value);
+      cursorRef.current.set({ radius: newSize });
+    },
+    [fabricCanvasRef, cursorRef]
+  );
 
   // Setus up paint refill
   useEffect(() => {
@@ -325,6 +338,16 @@ const GraffitiCanvas = () => {
         <Button border onClick={commitChanges}>
           commit
         </Button>
+      </div>
+      <div className="flex mt-8 mb-2 justify-center">
+        <ReactSlider
+          className="cursor-pointer w-full xl:max-w-[50%] h-[1px] bg-slate-200"
+          thumbClassName="cursor-pointer w-4 h-4 bg-white border border-slate-300 rounded-full -bottom-2"
+          defaultValue={0.5}
+          step={0.01}
+          max={1}
+          onChange={onBrushResize}
+        />
       </div>
       <div className="flex justify-center">
         <ProgressBar
