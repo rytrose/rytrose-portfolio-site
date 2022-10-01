@@ -213,12 +213,7 @@ const GraffitiCanvas = () => {
     const brush = new GraffitiBrush(canvas, visitorRef, cursorRef, updatePaint);
     const newSize = brush.setBrushSize(0.5);
     cursorRef.current.set({ radius: newSize });
-    brush.color = "green";
-    // brush.radius = 4;
-    // cursorRef.current.set({ radius: 50 });
-    // brush.density = 4;
-    // brush.particleOpacity = 0.5;
-    // brush.particleRadiusDeviation = 6;
+    brush.color = "hsl(180, 100%, 50%)";
     canvas.freeDrawingBrush = brush;
   }, [fabricCanvasRef, visitorRef, cursorRef, visitor.id, updatePaint]);
 
@@ -231,6 +226,17 @@ const GraffitiCanvas = () => {
       cursorRef.current.set({ radius: newSize });
     },
     [fabricCanvasRef, cursorRef]
+  );
+
+  const setBrushColor = useCallback(
+    (color) => {
+      const canvas = fabricCanvasRef.current;
+      if (!canvas) return;
+      const brush = canvas.freeDrawingBrush;
+      if (brush.type !== "graffitiBrush") return;
+      brush.color = color;
+    },
+    [fabricCanvasRef]
   );
 
   // Setus up paint refill
@@ -331,10 +337,6 @@ const GraffitiCanvas = () => {
   return (
     <div className="flex flex-col sm:h-[100vh] sm:max-h-[calc(100vh-162px-24px-48px)]">
       <div className="flex justify-center">
-        {/* TODO:
-          - only refill paint when no staged changes
-          - update global canvas when committed
-        */}
         <Button border onClick={commitChanges}>
           commit
         </Button>
@@ -342,7 +344,30 @@ const GraffitiCanvas = () => {
       <div className="flex mt-8 mb-2 justify-center">
         <ReactSlider
           className="cursor-pointer w-full xl:max-w-[50%] h-[1px] bg-slate-200"
-          thumbClassName="cursor-pointer w-4 h-4 bg-white border border-slate-300 rounded-full -bottom-2"
+          thumbClassName="cursor-pointer w-4 h-4 border border-slate-300 rounded-full -bottom-2
+          focus-visible:outline-none focus-visible:border-slate-400"
+          defaultValue={0.5}
+          step={0.001}
+          max={1}
+          renderThumb={(props, state) => {
+            const color = `hsl(${state.value * 360}, 100%, 50%)`;
+            setBrushColor(color);
+            return (
+              <div {...props}>
+                <div
+                  className="w-full h-full rounded-full"
+                  style={{ backgroundColor: color }}
+                />
+              </div>
+            );
+          }}
+        />
+      </div>
+      <div className="flex mt-8 mb-2 justify-center">
+        <ReactSlider
+          className="cursor-pointer w-full xl:max-w-[50%] h-[1px] bg-slate-200"
+          thumbClassName="cursor-pointer w-4 h-4 bg-white border border-slate-300 rounded-full -bottom-2
+          focus-visible:outline-none focus-visible:border-slate-400"
           defaultValue={0.5}
           step={0.01}
           max={1}
