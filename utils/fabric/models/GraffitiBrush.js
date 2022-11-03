@@ -8,11 +8,8 @@ import GraffitiParticle from "./GraffitiParticle";
 const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
   type: "graffitiBrush",
 
-  // TODO: Make radius and density configurable and inversely proportional,
-  // removing density as a property
   radius: 30,
   density: 20,
-
   particleOpacity: 1,
   particleRadius: 1,
   particleRadiusDeviation: 0,
@@ -27,13 +24,12 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     this.seed = undefined;
     this.rng = undefined;
     this.painting = false;
+    this.limitedToCanvasSize = true;
     this.last = { x: undefined, y: undefined };
   },
 
   // value should between 0-1
   setBrushSize: function (value) {
-    // TODO: set brush radius, then
-    // derive particle radius, opacity, density
     const minRadius = 4;
     const maxRadius = 50;
     const radius = denormalizeToRange(value, minRadius, maxRadius);
@@ -60,10 +56,17 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
       particleRadiusDeviation =
         maxParticleRadiusDeviation - denormalizedParticleRadiusDeviation;
     }
-    const denormalizedDensity = denormalizeToRange(value, 6, 40);
+
+    const minDensity = 6;
+    const maxDensity = 40;
+    const denormalizedDensity = denormalizeToRange(
+      value,
+      minDensity,
+      maxDensity
+    );
     const density = quantize(
       denormalizedDensity,
-      Array.from({ length: 40 }, (_, i) => i + 1)
+      Array.from({ length: maxDensity }, (_, i) => i + 1)
     );
 
     const minParticleOpacity = 0.25;
@@ -80,18 +83,18 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     this.density = density;
     this.particleOpacity = particleOpacity;
 
-    console.log(
-      "radius",
-      this.radius,
-      "particleRadius",
-      this.particleRadius,
-      "particleRadiusDeviation",
-      this.particleRadiusDeviation,
-      "density",
-      this.density,
-      "particleOpacity",
-      this.particleOpacity
-    );
+    // console.log(
+    //   "radius",
+    //   this.radius,
+    //   "particleRadius",
+    //   this.particleRadius,
+    //   "particleRadiusDeviation",
+    //   this.particleRadiusDeviation,
+    //   "density",
+    //   this.density,
+    //   "particleOpacity",
+    //   this.particleOpacity
+    // );
 
     return radius;
   },
@@ -130,10 +133,9 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
 
     // TODO: callback to notify out of paint
     if (!this.canSpray()) {
-      // Don't allow painting to continue in this stroke if ran out of paint
-      this.painting = false;
       // Set paint to zero to display paint as fully run out
       this.updatePaint(0);
+      // Don't allow painting to continue in this stroke if ran out of paint
       return;
     }
 

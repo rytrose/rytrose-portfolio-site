@@ -110,11 +110,10 @@ const GraffitiCanvas = () => {
     // Setup fabric event handlers
     canvas.on("mouse:up", (_) => {
       // Serialize canvas
-      const serializedCanvas = JSON.stringify(canvas);
+      // const serializedCanvas = JSON.stringify(canvas);
       // setTimeout(() => {
       //   canvas.clear();
       // }, 1000);
-
       // setTimeout(() => {
       //   canvas.loadFromJSON(serializedCanvas);
       // }, 2000);
