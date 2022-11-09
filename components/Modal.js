@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import useEventListener from "../hooks/useEventListener";
 import Button from "./Button";
 
-const Modal = ({ open, onClose, children }) => {
+const Modal = ({ open, onClose, children, showClose = true }) => {
   // For some reason, useEventListener does not work with just useRef.
   // Instead, populate the element with a callback ref.
   const [dialogElement, setDialogElement] = useState();
@@ -42,10 +42,12 @@ const Modal = ({ open, onClose, children }) => {
       className={`flex flex-col transition duration-[400ms] opacity-0 backdrop:bg-slate-800 backdrop:opacity-80 rounded-xl overflow-hidden`}
       onCancel={(e) => e.preventDefault()}
     >
-      <div className="flex font-serif text-sm h-8 overflow-hidden">
-        <div className="grow"></div>
-        <Button onClick={onClose}>close</Button>
-      </div>
+      {showClose && (
+        <div className="flex font-serif text-sm h-8 overflow-hidden">
+          <div className="grow"></div>
+          <Button onClick={onClose}>close</Button>
+        </div>
+      )}
       <div className="overflow-y-auto mt-2">{children}</div>
     </dialog>
   );

@@ -1,6 +1,7 @@
 import { fabric } from "fabric";
 import { useEffect, useRef, useCallback, useMemo, useState } from "react";
 import ReactSlider from "react-slider";
+import Modal from "../Modal";
 import useResizeObserver from "use-resize-observer";
 import useFabric from "../../hooks/useFabric";
 import useKeyPress from "../../hooks/useKeyPress";
@@ -8,6 +9,7 @@ import useVisitor from "../../hooks/useVisitor";
 import GraffitiBrush from "../../utils/fabric/models/GraffitiBrush";
 import Button from "../Button";
 import ProgressBar from "../ProgressBar";
+import useGraffitiSound from "../../hooks/useGraffitiSound";
 
 const MAX_PAINT = 40000;
 // const TOTAL_REFILL_TIME_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -15,6 +17,12 @@ const TOTAL_REFILL_TIME_MS = 30 * 1000; // 10 seconds
 const REFILL_INTERVAL_MS = 1000 / 60;
 
 const GraffitiCanvas = () => {
+  // Modal state
+  const [showModal, setShowModal] = useState(true);
+
+  // Sound reference
+  const [soundRef, startSound] = useGraffitiSound();
+
   // Visitor state
   const [visitor, visitorRef, visitorDispatch] = useVisitor();
 
@@ -103,6 +111,9 @@ const GraffitiCanvas = () => {
 
   // Sets up the canvas event handlers
   useEffect(() => {
+    // Setup sound
+    const sound = soundRef.current;
+
     // Setup canvas
     const canvas = fabricCanvasRef.current;
     canvas.add(cursorRef.current);
@@ -134,26 +145,23 @@ const GraffitiCanvas = () => {
     });
 
     // Hides the brush cursor
-    canvas.on(
-      "mouse:out",
-      (_) => {
-        const cursor = cursorRef.current;
-        cursor
-          .set({
-            left: -100,
-            top: -100,
-          })
-          .setCoords();
-        canvas.renderAll();
-      },
-      [fabricCanvasRef, cursorRef]
-    );
+    canvas.on("mouse:out", (_) => {
+      const cursor = cursorRef.current;
+      cursor
+        .set({
+          left: -100,
+          top: -100,
+        })
+        .setCoords();
+      canvas.renderAll();
+    });
 
     // When graffiti groups are changed, updates the audio pipeline
     const updateAudioForGroups = (e) => {
       if (e.target.type === "graffitiGroup") {
         const groups = canvas.getObjects("graffitiGroup");
-        // TODO: send to audio pipeline
+        // Update the current sound
+        sound.updateGroups(groups);
       }
     };
     canvas.on("object:added", updateAudioForGroups);
@@ -178,6 +186,7 @@ const GraffitiCanvas = () => {
     });
   }, [
     fabricCanvasRef,
+    soundRef,
     cursorRef,
     visitorRef,
     visitorDispatch,
@@ -388,6 +397,26 @@ const GraffitiCanvas = () => {
           height={500}
         />
       </div>
+      <Modal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        showClose={false}
+      >
+        <div className="flex flex-col justify-center">
+          <p className="text-sm">press begin to make art</p>
+          <div className="flex justify-center mt-2">
+            <Button
+              onClick={() => {
+                startSound();
+                setShowModal(false);
+              }}
+              className="font-serif text-center"
+            >
+              begin
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
