@@ -397,26 +397,28 @@ const GraffitiCanvas = () => {
           height={500}
         />
       </div>
-      <Modal
-        open={showModal}
-        onClose={() => setShowModal(false)}
-        showClose={false}
-      >
-        <div className="flex flex-col justify-center">
-          <p className="text-sm">press begin to make art</p>
-          <div className="flex justify-center mt-2">
-            <Button
-              onClick={() => {
-                startSound();
-                setShowModal(false);
-              }}
-              className="font-serif text-center"
-            >
-              begin
-            </Button>
+      {showModal && (
+        <Modal
+          open={showModal}
+          onClose={() => setShowModal(false)}
+          showClose={false}
+        >
+          <div className="flex flex-col justify-center">
+            <p className="text-sm">press begin to make art</p>
+            <div className="flex justify-center mt-2">
+              <Button
+                onClick={() => {
+                  startSound();
+                  setShowModal(false);
+                }}
+                className="font-serif text-center"
+              >
+                begin
+              </Button>
+            </div>
           </div>
-        </div>
-      </Modal>
+        </Modal>
+      )}
     </div>
   );
 };

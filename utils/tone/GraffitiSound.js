@@ -30,24 +30,36 @@ export class GraffitiSound {
 
   newGroupPattern(group) {
     // Analyze group and derive metadata
-    let metadata = {
+    let pattern = {
       seed: group.seed,
     };
 
-    // Return metatdata about pattern
-    return metadata;
+    // Time is relative to now, start immediately
+    this.schedulePattern(pattern, "+0");
+
+    // Return pattern object
+    return pattern;
   }
 
-  schedulePattern(pattern) {
+  schedulePattern(pattern, time) {
     if (pattern.seed in this.groups) {
       // Schedule next event in pattern
-      // Recursively call schedulePattern(pattern)
+      // Recursively call schedulePattern(pattern, time)
+      Tone.Transport.schedule((time) => {
+        // TODO: make music
+        this.synth.triggerAttackRelease("A3", "16n");
+        const next = `@4n`;
+        console.log(next);
+        this.schedulePattern(pattern, next);
+      }, time);
     } else {
+      console.log("removing pattern:", pattern.seed);
       delete this.groupPatterns[pattern.seed];
     }
   }
 
   async start() {
+    this.synth = new Tone.MonoSynth().toDestination();
     await Tone.start();
     Tone.Transport.start();
   }
