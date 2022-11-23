@@ -34,13 +34,18 @@ const GraffitiCanvas = () => {
   const stagedGroupsRef = useRef([]);
 
   // Colors for the day
-  const colorPalette = useMemo(() => colorsForDate(new Date()), []);
+  const [colorPalette, setColorPalette] = useState([]);
 
   // Paint bar color
   const [paintColor, setPaintColor] = useState("#000000");
 
   // Brush size
   const [brushSize, setBrushSize] = useState(0.5);
+
+  // Set the current day's colors on the client
+  useEffect(() => {
+    setColorPalette(colorsForDate(new Date()));
+  }, []);
 
   // Update visitor paint to max paint if unset
   useEffect(() => {
