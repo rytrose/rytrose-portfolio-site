@@ -10,7 +10,7 @@ const useKeyPress = (
 
   useEffect(() => {
     let checkKey = targetKey;
-    if (typeof targetKey !== "function") checkKey = (e) => e.key === targetKey;
+    if (typeof targetKey !== "function") checkKey = (e) => e.code === targetKey;
 
     // If pressed key is our target key then set to true
     const downHandler = (e) => {

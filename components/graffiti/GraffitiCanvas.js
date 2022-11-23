@@ -10,6 +10,9 @@ import GraffitiBrush from "../../utils/fabric/models/GraffitiBrush";
 import Button from "../Button";
 import ProgressBar from "../ProgressBar";
 import useGraffitiSound from "../../hooks/useGraffitiSound";
+import Loading from "../Loading";
+import { colorsForDate } from "../../utils/color";
+import GraffittiPalette from "./GraffitiPalette";
 
 const MAX_PAINT = 40000;
 // const TOTAL_REFILL_TIME_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -19,6 +22,7 @@ const REFILL_INTERVAL_MS = 1000 / 60;
 const GraffitiCanvas = () => {
   // Modal state
   const [showModal, setShowModal] = useState(true);
+  const [soundLoading, setSoundLoading] = useState(false);
 
   // Sound reference
   const [soundRef, startSound] = useGraffitiSound();
@@ -28,6 +32,15 @@ const GraffitiCanvas = () => {
 
   // Graffiti groups added to the canvas that haven't yet been committed
   const stagedGroupsRef = useRef([]);
+
+  // Colors for the day
+  const colorPalette = useMemo(() => colorsForDate(new Date()), []);
+
+  // Paint bar color
+  const [paintColor, setPaintColor] = useState("#000000");
+
+  // Brush size
+  const [brushSize, setBrushSize] = useState(0.5);
 
   // Update visitor paint to max paint if unset
   useEffect(() => {
@@ -157,15 +170,17 @@ const GraffitiCanvas = () => {
     });
 
     // When graffiti groups are changed, updates the audio pipeline
-    const updateAudioForGroups = (e) => {
-      if (e.target.type === "graffitiGroup") {
-        const groups = canvas.getObjects("graffitiGroup");
-        // Update the current sound
-        sound.updateGroups(groups);
-      }
+    const updateAudioForGroups = (eventType) => {
+      return (e) => {
+        if (e.target.type === "graffitiGroup") {
+          const groups = canvas.getObjects("graffitiGroup");
+          // Update the current sound
+          sound.updateGroups(eventType, e.target, groups);
+        }
+      };
     };
-    canvas.on("object:added", updateAudioForGroups);
-    canvas.on("object:removed", updateAudioForGroups);
+    canvas.on("object:added", updateAudioForGroups("added"));
+    canvas.on("object:removed", updateAudioForGroups("removed"));
 
     // Add new group to staged groups
     canvas.on("object:added", (e) => {
@@ -221,12 +236,21 @@ const GraffitiCanvas = () => {
     const brush = new GraffitiBrush(canvas, visitorRef, cursorRef, updatePaint);
     const newSize = brush.setBrushSize(0.5);
     cursorRef.current.set({ radius: newSize });
-    brush.color = "hsl(180, 100%, 50%)";
+    brush.color = colorPalette[0];
+    setPaintColor(colorPalette[0]);
     canvas.freeDrawingBrush = brush;
-  }, [fabricCanvasRef, visitorRef, cursorRef, visitor.id, updatePaint]);
+  }, [
+    fabricCanvasRef,
+    visitorRef,
+    cursorRef,
+    visitor.id,
+    updatePaint,
+    colorPalette,
+  ]);
 
   const onBrushResize = useCallback(
     (value) => {
+      setBrushSize(value);
       const canvas = fabricCanvasRef.current;
       const brush = canvas.freeDrawingBrush;
       if (brush.type !== "graffitiBrush") return;
@@ -243,6 +267,7 @@ const GraffitiCanvas = () => {
       const brush = canvas.freeDrawingBrush;
       if (brush.type !== "graffitiBrush") return;
       brush.color = color;
+      setPaintColor(color);
     },
     [fabricCanvasRef]
   );
@@ -329,6 +354,22 @@ const GraffitiCanvas = () => {
     }, [fabricCanvasRef, visitorRef, stackRef, updatePaint])
   );
 
+  // TODO: reconsider this -- would need to track the brush size on every
+  // particle if it can change mid-group
+  // // Sets up brush sizing keys
+  // useKeyPress(
+  //   "KeyA",
+  //   useCallback(() => {
+  //     onBrushResize(Math.max(brushSize - 0.05, 0));
+  //   }, [brushSize, onBrushResize])
+  // );
+  // useKeyPress(
+  //   "KeyD",
+  //   useCallback(() => {
+  //     onBrushResize(Math.min(brushSize + 0.05, 1));
+  //   }, [brushSize, onBrushResize])
+  // );
+
   const commitChanges = useCallback(() => {
     // Update the timestamp of most recent change
     setLastPainted();
@@ -349,34 +390,15 @@ const GraffitiCanvas = () => {
           commit
         </Button>
       </div>
-      <div className="flex mt-8 mb-2 justify-center">
-        <ReactSlider
-          className="cursor-pointer w-full xl:max-w-[50%] h-[1px] bg-slate-200"
-          thumbClassName="cursor-pointer w-4 h-4 border border-slate-300 rounded-full -bottom-2
-          focus-visible:outline-none focus-visible:border-slate-400"
-          defaultValue={0.5}
-          step={0.001}
-          max={1}
-          renderThumb={(props, state) => {
-            const color = `hsl(${state.value * 360}, 100%, 50%)`;
-            setBrushColor(color);
-            return (
-              <div {...props}>
-                <div
-                  className="w-full h-full rounded-full"
-                  style={{ backgroundColor: color }}
-                />
-              </div>
-            );
-          }}
-        />
+      <div className="flex flex-col mt-8 mb-2 justify-center">
+        <GraffittiPalette colors={colorPalette} onClick={setBrushColor} />
       </div>
-      <div className="flex mt-8 mb-2 justify-center">
+      <div className="flex mt-4 mb-2 justify-center">
         <ReactSlider
           className="cursor-pointer w-full xl:max-w-[50%] h-[1px] bg-slate-200"
           thumbClassName="cursor-pointer w-4 h-4 bg-white border border-slate-300 rounded-full -bottom-2
           focus-visible:outline-none focus-visible:border-slate-400"
-          defaultValue={0.5}
+          value={brushSize}
           step={0.01}
           max={1}
           onChange={onBrushResize}
@@ -385,7 +407,7 @@ const GraffitiCanvas = () => {
       <div className="flex justify-center">
         <ProgressBar
           className="h-4 my-4 xl:max-w-[50%]"
-          progressColor="#11660e"
+          progressColor={paintColor}
           progress={(visitor.paint / MAX_PAINT) * 100}
         />
       </div>
@@ -406,15 +428,21 @@ const GraffitiCanvas = () => {
           <div className="flex flex-col justify-center">
             <p className="text-sm">press begin to make art</p>
             <div className="flex justify-center mt-2">
-              <Button
-                onClick={() => {
-                  startSound();
-                  setShowModal(false);
-                }}
-                className="font-serif text-center"
-              >
-                begin
-              </Button>
+              {soundLoading ? (
+                <Loading className="w-[24px]" fill="#94a3b8" />
+              ) : (
+                <Button
+                  onClick={async () => {
+                    setSoundLoading(true);
+                    await startSound();
+                    setShowModal(false);
+                    setSoundLoading(false);
+                  }}
+                  className="font-serif text-center"
+                >
+                  begin
+                </Button>
+              )}
             </div>
           </div>
         </Modal>
