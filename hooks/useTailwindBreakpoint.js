@@ -11,6 +11,8 @@ const useTailwindBreakpoint = (breakpoint) => {
   useEffect(() => {
     const onResize = () => setInnerWidth(window.innerWidth);
     window.addEventListener("resize", onResize);
+    // Call explicitly for page load
+    onResize();
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
