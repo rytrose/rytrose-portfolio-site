@@ -12,7 +12,8 @@ import ProgressBar from "../ProgressBar";
 import useGraffitiSound from "../../hooks/useGraffitiSound";
 import Loading from "../Loading";
 import { colorsForDate } from "../../utils/color";
-import GraffittiPalette from "./GraffitiPalette";
+import useGraffitiPalette from "./GraffitiPalette";
+import useTailwindBreakpoint from "../../hooks/useTailwindBreakpoint";
 
 const MAX_PAINT = 40000;
 // const TOTAL_REFILL_TIME_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -41,6 +42,9 @@ const GraffitiCanvas = () => {
 
   // Brush size
   const [brushSize, setBrushSize] = useState(0.5);
+
+  // Tailwind breakpoint
+  const tailWindSm = useTailwindBreakpoint("sm");
 
   // Set the current day's colors on the client
   useEffect(() => {
@@ -222,7 +226,7 @@ const GraffitiCanvas = () => {
     [visitorDispatch]
   );
 
-  // Stores that last time paint was used to determine the current
+  // Stores the last time paint was used to determine the current
   // value for paint after refilling over time
   const setLastPainted = useCallback(() => {
     visitorDispatch({
@@ -253,18 +257,22 @@ const GraffitiCanvas = () => {
     colorPalette,
   ]);
 
+  // Resizes the brush, expects a value between 0-1
   const onBrushResize = useCallback(
     (value) => {
-      setBrushSize(value);
       const canvas = fabricCanvasRef.current;
       const brush = canvas.freeDrawingBrush;
       if (brush.type !== "graffitiBrush") return;
       const newSize = brush.setBrushSize(value);
-      cursorRef.current.set({ radius: newSize });
+      if (cursorRef.current.get("radius") !== newSize) {
+        cursorRef.current.set({ radius: newSize });
+        setBrushSize(value);
+      }
     },
     [fabricCanvasRef, cursorRef]
   );
 
+  // Updates the brush color
   const setBrushColor = useCallback(
     (color) => {
       const canvas = fabricCanvasRef.current;
@@ -276,6 +284,14 @@ const GraffitiCanvas = () => {
     },
     [fabricCanvasRef]
   );
+
+  // Graffiti palette component
+  const [GraffitiPalette, incrementGraffitiPalette, decrementGraffitiPalette] =
+    useGraffitiPalette(colorPalette, setBrushColor);
+
+  // Sets up changing color key shortcuts
+  useKeyPress("KeyW", decrementGraffitiPalette);
+  useKeyPress("KeyE", incrementGraffitiPalette);
 
   // Setus up paint refill
   useEffect(() => {
@@ -359,22 +375,21 @@ const GraffitiCanvas = () => {
     }, [fabricCanvasRef, visitorRef, stackRef, updatePaint])
   );
 
-  // TODO: reconsider this -- would need to track the brush size on every
-  // particle if it can change mid-group
-  // // Sets up brush sizing keys
-  // useKeyPress(
-  //   "KeyA",
-  //   useCallback(() => {
-  //     onBrushResize(Math.max(brushSize - 0.05, 0));
-  //   }, [brushSize, onBrushResize])
-  // );
-  // useKeyPress(
-  //   "KeyD",
-  //   useCallback(() => {
-  //     onBrushResize(Math.min(brushSize + 0.05, 1));
-  //   }, [brushSize, onBrushResize])
-  // );
+  // Sets up brush sizing keys, brush won't resize if painting
+  useKeyPress(
+    "KeyA",
+    useCallback(() => {
+      onBrushResize(Math.max(brushSize - 0.05, 0));
+    }, [brushSize, onBrushResize])
+  );
+  useKeyPress(
+    "KeyD",
+    useCallback(() => {
+      onBrushResize(Math.min(brushSize + 0.05, 1));
+    }, [brushSize, onBrushResize])
+  );
 
+  // Saves the current changes to the canvas
   const commitChanges = useCallback(() => {
     // Update the timestamp of most recent change
     setLastPainted();
@@ -395,12 +410,21 @@ const GraffitiCanvas = () => {
           commit
         </Button>
       </div>
-      <div className="flex flex-col mt-8 mb-2 justify-center">
-        <GraffittiPalette colors={colorPalette} onClick={setBrushColor} />
+      <div className="flex mt-8 mb-2 justify-center items-center">
+        {tailWindSm && (
+          <div className="text-xs font-serif text-slate-400">&ndash; (W)</div>
+        )}
+        {GraffitiPalette}
+        {tailWindSm && (
+          <div className="text-xs font-serif text-slate-400">+ (E)</div>
+        )}
       </div>
-      <div className="flex mt-4 mb-2 justify-center">
+      <div className="flex mt-4 mb-2 justify-center content-center">
+        {tailWindSm && (
+          <div className="text-xs font-serif text-slate-400">&ndash; (A)</div>
+        )}
         <ReactSlider
-          className="cursor-pointer w-full xl:max-w-[50%] h-[1px] bg-slate-200"
+          className="top-2 mx-2 cursor-pointer w-[80%] xl:max-w-[50%] h-[1px] bg-slate-200"
           thumbClassName="cursor-pointer w-4 h-4 bg-white border border-slate-300 rounded-full -bottom-2
           focus-visible:outline-none focus-visible:border-slate-400"
           value={brushSize}
@@ -408,6 +432,9 @@ const GraffitiCanvas = () => {
           max={1}
           onChange={onBrushResize}
         />
+        {tailWindSm && (
+          <div className="text-xs font-serif text-slate-400">+ (D)</div>
+        )}
       </div>
       <div className="flex justify-center">
         <ProgressBar

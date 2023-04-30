@@ -28,8 +28,11 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     this.last = { x: undefined, y: undefined };
   },
 
-  // value should between 0-1
+  // Value should be between 0-1
   setBrushSize: function (value) {
+    // Don't update brush size if actively painting
+    if (this.painting) return;
+
     const minRadius = 4;
     const maxRadius = 50;
     const radius = denormalizeToRange(value, minRadius, maxRadius);
@@ -95,6 +98,9 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     //   "particleOpacity",
     //   this.particleOpacity
     // );
+
+    // Re-render to update cursor size
+    this.canvas.requestRenderAll();
 
     return radius;
   },
