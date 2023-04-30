@@ -18,36 +18,13 @@ export class GraffitiSound {
     );
   }
 
-  generateToneLoop(group) {
-    const pitches = ["B3", "C4", "E4", "G4"];
-    return (
-      new Tone.Loop(
-        (time) => {
-          const numNotes = Math.floor(Math.random() * 4);
-          for (let i = 0; i < numNotes; i++) {
-            const pitchIndex = Math.floor(Math.random() * pitches.length);
-            this.samplers.pad.triggerAttackRelease(
-              pitches[pitchIndex],
-              "8n",
-              `+0:${i + 1}`
-            );
-          }
-        },
-        // TODO: generate loop interval
-        "1m"
-      )
-        // Start on the next quantized measure
-        .start("@1m")
-    );
-  }
-
   padLoop() {
     return (
       new Tone.Loop((time) => {
         const pitches = ["B3", "C4", "E4", "G4"];
         this.samplers.pad.triggerAttack(
           pitches[Math.floor(4 * Math.random())],
-          `+${Math.floor(4 * Math.random())}:0`
+          `+${Math.floor(4 * Math.random())}:1`
         );
       }, "4m")
         // Start on the next quantized measure
@@ -58,19 +35,39 @@ export class GraffitiSound {
   subLoop() {
     return (
       new Tone.Loop((time) => {
-        const pitches = ["B0", "C1", "E1", "G1"];
-        this.samplers.pad.triggerAttack(
-          pitches[Math.floor(4 * Math.random())],
-          `+${Math.floor(4 * Math.random())}:0`
-        );
-      }, "4m")
+        this.samplers.sub.triggerAttack("C2", "+0:1");
+        // TODO
+      }, "1m")
         // Start on the next quantized measure
         .start("@1m")
     );
   }
 
+  stab1Loop() {
+    return (
+      new Tone.Loop((time) => {
+        this.samplers.stab1.triggerAttack("E5", "+0:1");
+        // TODO
+      }, "4n")
+        // Start on the next quantized measure
+        .start("@1m")
+    );
+  }
+
+  stab2Loop() {
+    return (
+      new Tone.Loop((time) => {
+        this.samplers.stab2.triggerAttack("B4", "+0:1");
+        // TODO
+      }, "4n")
+        // Start on the next quantized measure
+        .start("@1:0:2")
+    );
+  }
+
   async loadSamplers() {
-    window.reverb = new Tone.Reverb(4).toDestination();
+    window.compressor = new Tone.Compressor(-30, 3).toDestination();
+    window.reverb = new Tone.Reverb(4).connect(window.compressor);
     reverb.wet.value = 0.2;
     await new Promise((resolve) => {
       this.samplers.pad = new Tone.Sampler({
@@ -80,7 +77,7 @@ export class GraffitiSound {
         baseUrl:
           "https://rytrose-personal-website.s3.amazonaws.com/portfolio-site/graffiti-sound/",
         onload: resolve,
-      }).toDestination();
+      }).connect(window.compressor);
     });
 
     await new Promise((resolve) => {
@@ -113,7 +110,7 @@ export class GraffitiSound {
         baseUrl:
           "https://rytrose-personal-website.s3.amazonaws.com/portfolio-site/graffiti-sound/",
         onload: resolve,
-      }).toDestination();
+      }).connect(window.compressor);
     });
     window.samplers = this.samplers;
   }
@@ -126,6 +123,8 @@ export class GraffitiSound {
     Tone.Transport.start();
     window.Tone = Tone;
     this.padLoop();
-    console.log("audio started");
+    this.subLoop();
+    this.stab1Loop();
+    this.stab2Loop();
   }
 }

@@ -439,7 +439,7 @@ const GraffitiCanvas = () => {
                 <Button
                   onClick={async () => {
                     setSoundLoading(true);
-                    await startSound();
+                    // await startSound();
                     setShowModal(false);
                     setSoundLoading(false);
                   }}
