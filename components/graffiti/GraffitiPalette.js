@@ -48,7 +48,8 @@ const useGraffitiPalette = (colors, onClick) => {
       clicked(newIndex, colors[newIndex]);
     }, [selected, colors, clicked]),
     useCallback(() => {
-      const newIndex = (selected - 1) % colors.length;
+      const newIndex =
+        (((selected - 1) % colors.length) + colors.length) % colors.length;
       clicked(newIndex, colors[newIndex]);
     }, [selected, colors, clicked]),
   ];
