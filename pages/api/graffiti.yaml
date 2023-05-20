@@ -1,3 +1,4 @@
-# Test state
-test:
-  name: "rytrose"
+current:
+  t: 0
+  d: ""
+history: []

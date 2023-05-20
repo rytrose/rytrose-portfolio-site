@@ -1,75 +1,90 @@
 import yaml from "js-yaml";
-import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { compressToUTF16, decompressFromUTF16 } from "lz-string";
+import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { BUCKET_NAME, PREFIX, s3Client } from "../../utils/s3";
 import { readStreamToString } from "../../utils/stream";
 
-/*
-idea: sonified graffiti wall
-- visitor gets certain amount of "paint"
-- visitor can apply paint to canvas
-- paint gets sonified
-  - visitor can isolate their sonified paintings
-- consider: https://github.com/fabricjs/fabric.js
-  - esp. for serialization
-  - resizable canvas: https://jsfiddle.net/robsch/g8x9mjvt/
-*/
-
 export const config = {
-  runtime: "experimental-edge",
+  api: {
+    responseLimit: false,
+  },
 };
 
-const GET = async () => {
+let state;
+
+const getCurrentState = async () => {
+  if (state) {
+    return state;
+  }
+
   try {
     const { Body } = await s3Client.send(
       new GetObjectCommand({
         Bucket: BUCKET_NAME,
-        Key: PREFIX + "/graffiti.yaml",
+        Key: PREFIX + "/graffiti.yaml.enc",
       })
     );
-    const yamlString = await readStreamToString(Body);
-    const data = yaml.load(yamlString);
-    return new Response(data, {
-      status: 200,
-    });
+    const encYamlString = await readStreamToString(Body);
+    const state = yaml.load(decompressFromUTF16(encYamlString));
+    if (state) {
+      return state;
+    }
   } catch (e) {
     console.error(e);
-    return new Response(
-      {
-        error: `unable to get graffiti: ${e}`,
-      },
-      {
-        status: 500,
-      }
+  }
+
+  return {
+    current: {
+      t: 0,
+      d: "",
+    },
+    history: [],
+  };
+};
+
+const updateState = async (state) => {
+  try {
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: PREFIX + "/graffiti.yaml.enc",
+        Body: compressToUTF16(yaml.dump(state)),
+      })
     );
+  } catch (e) {
+    console.error(e);
   }
 };
 
-const POST = async (req) => {
-  console.log("POST");
-  return new Response(
-    {
-      method: "POST",
-    },
-    {
-      status: 200,
-    }
-  );
+const GET = async (res) => {
+  try {
+    state = await getCurrentState();
+    res.status(200).send(state.current.d);
+  } catch (e) {
+    console.error(e);
+    res.status(500).send(`unable to get graffiti: ${e}`);
+  }
 };
 
-const handler = async (req) => {
+const POST = async (req, res) => {
+  state = await getCurrentState();
+  state.history.push({ t: state.current.t, d: state.current.d });
+  state.current.t = Date.now();
+  state.current.d = req.body;
+  await updateState(state);
+  res.status(200).send();
+};
+
+const handler = async (req, res) => {
   if (req.method === "POST") {
-    return await POST(req);
+    await POST(req, res);
+    return;
   } else if (req.method === "GET") {
-    return await GET(req);
+    await GET(res);
+    return;
   } else {
-    return new Response(
-      {
-        error: "not found",
-      },
-      {
-        status: 404,
-      }
-    );
+    res.status(404).send("not found");
+    return;
   }
 };
 

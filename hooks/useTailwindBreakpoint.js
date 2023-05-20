@@ -20,7 +20,6 @@ const useTailwindBreakpoint = (breakpoint) => {
     const value = resolvedTailwindConfig.theme.screens[breakpoint];
     if (!value) return;
     const px = +value.slice(0, value.indexOf("px"));
-    console.log(innerWidth, px, innerWidth >= px);
     setIsPastBreakpoint(innerWidth >= px);
   }, [breakpoint, innerWidth]);
 

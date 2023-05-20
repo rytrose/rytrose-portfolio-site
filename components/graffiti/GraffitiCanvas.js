@@ -1,6 +1,7 @@
 import { fabric } from "fabric";
 import { useEffect, useRef, useCallback, useMemo, useState } from "react";
 import ReactSlider from "react-slider";
+import { compressToUTF16, decompressFromUTF16 } from "lz-string";
 import Modal from "../Modal";
 import useResizeObserver from "use-resize-observer";
 import useFabric from "../../hooks/useFabric";
@@ -33,6 +34,7 @@ const GraffitiCanvas = () => {
 
   // Graffiti groups added to the canvas that haven't yet been committed
   const stagedGroupsRef = useRef([]);
+  const [changesStaged, setChangesStaged] = useState(false);
 
   // Colors for the day
   const [colorPalette, setColorPalette] = useState([]);
@@ -142,14 +144,7 @@ const GraffitiCanvas = () => {
 
     // Setup fabric event handlers
     canvas.on("mouse:up", (_) => {
-      // Serialize canvas
-      // const serializedCanvas = JSON.stringify(canvas);
-      // setTimeout(() => {
-      //   canvas.clear();
-      // }, 1000);
-      // setTimeout(() => {
-      //   canvas.loadFromJSON(serializedCanvas);
-      // }, 2000);
+      // For development use only
     });
 
     // Updates the brush cursor
@@ -195,6 +190,7 @@ const GraffitiCanvas = () => {
     canvas.on("object:added", (e) => {
       if (e.target.type === "graffitiGroup") {
         stagedGroupsRef.current.push(e.target);
+        setChangesStaged(true);
       }
     });
 
@@ -206,8 +202,22 @@ const GraffitiCanvas = () => {
         if (i >= 0) {
           stagedGroups.splice(i, 1);
         }
+        if (stagedGroups.length === 0) {
+          setChangesStaged(false);
+        }
       }
     });
+
+    // Initializes canvas from state
+    (async () => {
+      const res = await fetch("/api/graffiti");
+      const data = await res.text();
+      console.log("got", data);
+      if (data) {
+        const serializedCanvas = decompressFromUTF16(data);
+        canvas.loadFromJSON(serializedCanvas);
+      }
+    })();
   }, [
     fabricCanvasRef,
     soundRef,
@@ -396,17 +406,26 @@ const GraffitiCanvas = () => {
 
     // Clear the staged groups
     stagedGroupsRef.current = [];
+    setChangesStaged(false);
 
     // Clear the undo/redo stack
     stackRef.current = [];
 
-    // TODO: submit updates to canvas
-  }, [stagedGroupsRef, stackRef, setLastPainted]);
+    // Serialize canvas
+    const canvas = fabricCanvasRef.current;
+    const serializedCanvas = compressToUTF16(JSON.stringify(canvas));
+    (async () => {
+      const res = await fetch("/api/graffiti", {
+        method: "POST",
+        body: serializedCanvas,
+      });
+    })();
+  }, [stagedGroupsRef, stackRef, fabricCanvasRef, setLastPainted]);
 
   return (
     <div className="flex flex-col sm:h-[100vh] sm:max-h-[calc(100vh-162px-24px-48px)]">
       <div className="flex justify-center">
-        <Button border onClick={commitChanges}>
+        <Button border onClick={commitChanges} disabled={!changesStaged}>
           commit
         </Button>
       </div>
