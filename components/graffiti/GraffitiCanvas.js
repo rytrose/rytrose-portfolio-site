@@ -76,6 +76,10 @@ const GraffitiCanvas = () => {
   );
   const [canvasElRef, fabricCanvasRef] = useFabric(fabricOptions);
 
+  // Used to indicate when the canvas was loaded from JSON to prevent 
+  // group added events before the first canvas load
+  const loadedCanvasRef = useRef(false);
+
   // Resizes the canvas responsively
   const onDivResize = useCallback(
     (size) => {
@@ -188,7 +192,7 @@ const GraffitiCanvas = () => {
 
     // Add new group to staged groups
     canvas.on("object:added", (e) => {
-      if (e.target.type === "graffitiGroup") {
+      if (loadedCanvasRef.current && e.target.type === "graffitiGroup") {
         stagedGroupsRef.current.push(e.target);
         setChangesStaged(true);
       }
@@ -210,12 +214,17 @@ const GraffitiCanvas = () => {
 
     // Initializes canvas from state
     (async () => {
-      const res = await fetch("/api/graffiti");
-      const data = await res.text();
-      console.log("got", data);
-      if (data) {
-        const serializedCanvas = decompressFromUTF16(data);
-        canvas.loadFromJSON(serializedCanvas);
+      try {
+        const res = await fetch("/api/graffiti");
+        const data = await res.text();
+        console.log("canvas size in bytes", data.length * 2);
+        if (data) {
+          const serializedCanvas = decompressFromUTF16(data);
+          canvas.loadFromJSON(serializedCanvas);
+        }
+      }
+      finally {
+        loadedCanvasRef.current = true;
       }
     })();
   }, [
@@ -225,6 +234,7 @@ const GraffitiCanvas = () => {
     visitorRef,
     visitorDispatch,
     stagedGroupsRef,
+    loadedCanvasRef,
   ]);
 
   // Dispatches an update to visitor.paint. This callback will be
@@ -344,7 +354,7 @@ const GraffitiCanvas = () => {
   const stackRef = useRef([]);
   useKeyPress(
     useCallback((e) => {
-      return e.code === "KeyZ" && !e.shiftKey && e.metaKey;
+      return e.code === "KeyZ" && !e.shiftKey && ((window.navigator.platform.indexOf("Mac") === 0 && e.metaKey) || (window.navigator.platform.indexOf("Mac") !== 0 && e.ctrlKey));
     }, []),
     useCallback(() => {
       const canvas = fabricCanvasRef.current;
@@ -366,7 +376,7 @@ const GraffitiCanvas = () => {
   );
   useKeyPress(
     useCallback((e) => {
-      return e.code === "KeyZ" && e.shiftKey && e.metaKey;
+      return e.code === "KeyZ" && e.shiftKey && ((window.navigator.platform.indexOf("Mac") === 0 && e.metaKey) || (window.navigator.platform.indexOf("Mac") !== 0 && e.ctrlKey));
     }, []),
     useCallback(() => {
       const canvas = fabricCanvasRef.current;
