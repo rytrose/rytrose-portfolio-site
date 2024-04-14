@@ -24,7 +24,7 @@ export class GraffitiSound {
         const pitches = ["B3", "C4", "E4", "G4"];
         this.samplers.pad.triggerAttack(
           pitches[Math.floor(4 * Math.random())],
-          `@${Math.floor(4 * Math.random())}m`
+          `+${Math.floor(1 + 4 * Math.random())}m`
         );
       }, "4m")
         // Start on the next quantized measure
@@ -35,7 +35,7 @@ export class GraffitiSound {
   subLoop() {
     return (
       new Tone.Loop((time) => {
-        this.samplers.sub.triggerAttack("C2", "@4n");
+        this.samplers.sub.triggerAttack("C2");
         // TODO
       }, "1m")
         // Start on the next quantized measure
@@ -46,9 +46,12 @@ export class GraffitiSound {
   stab1Loop() {
     return (
       new Tone.Loop((time) => {
-        this.samplers.stab1.triggerAttack("E5", "@4n");
+        this.samplers.stab1.triggerAttack("E5", "+0:1");
+        this.samplers.stab1.triggerAttack("E5", "+0:2");
+        this.samplers.stab1.triggerAttack("E5", "+0:3");
+        this.samplers.stab1.triggerAttack("E5", "+1:0");
         // TODO
-      }, "4n")
+      }, "1m")
         // Start on the next quantized measure
         .start("@1m")
     );
@@ -57,11 +60,14 @@ export class GraffitiSound {
   stab2Loop() {
     return (
       new Tone.Loop((time) => {
-        this.samplers.stab2.triggerAttack("B4", "@8n");
+        this.samplers.stab2.triggerAttack("B4", "+0:1:2");
+        this.samplers.stab2.triggerAttack("B4", "+0:2:2");
+        this.samplers.stab2.triggerAttack("B4", "+0:3:2");
+        this.samplers.stab2.triggerAttack("B4", "+1:0:2");
         // TODO
-      }, "4n")
+      }, "1m")
         // Start on the next quantized measure
-        .start("@1:0:2")
+        .start("@1m")
     );
   }
 
