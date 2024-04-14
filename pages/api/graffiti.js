@@ -10,7 +10,18 @@ export const config = {
   },
 };
 
+// In-memory state
 let state;
+
+const defaultState = () => {
+  return {
+    current: {
+      t: 0,
+      d: "",
+    },
+    history: [],
+  };
+};
 
 const getCurrentState = async () => {
   if (state) {
@@ -25,21 +36,15 @@ const getCurrentState = async () => {
       })
     );
     const encYamlString = await readStreamToString(Body);
-    const state = yaml.load(decompressFromUTF16(encYamlString));
-    if (state) {
-      return state;
+    const loadedState = yaml.load(decompressFromUTF16(encYamlString));
+    if (loadedState) {
+      return loadedState;
     }
   } catch (e) {
     console.error(e);
   }
 
-  return {
-    current: {
-      t: 0,
-      d: "",
-    },
-    history: [],
-  };
+  return defaultState();
 };
 
 const updateState = async (state) => {
@@ -67,6 +72,13 @@ const GET = async (res) => {
 };
 
 const POST = async (req, res) => {
+  if (process.env.DEV === "true" && req.query.clear === "true") {
+    console.log("clearing state");
+    await updateState(defaultState());
+    res.status(200).send();
+    return;
+  }
+
   state = await getCurrentState();
   state.history.push({ t: state.current.t, d: state.current.d });
   state.current.t = Date.now();

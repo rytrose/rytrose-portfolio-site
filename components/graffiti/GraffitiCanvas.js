@@ -76,7 +76,7 @@ const GraffitiCanvas = () => {
   );
   const [canvasElRef, fabricCanvasRef] = useFabric(fabricOptions);
 
-  // Used to indicate when the canvas was loaded from JSON to prevent 
+  // Used to indicate when the canvas was loaded from JSON to prevent
   // group added events before the first canvas load
   const loadedCanvasRef = useRef(false);
 
@@ -222,8 +222,7 @@ const GraffitiCanvas = () => {
           const serializedCanvas = decompressFromUTF16(data);
           canvas.loadFromJSON(serializedCanvas);
         }
-      }
-      finally {
+      } finally {
         loadedCanvasRef.current = true;
       }
     })();
@@ -354,7 +353,12 @@ const GraffitiCanvas = () => {
   const stackRef = useRef([]);
   useKeyPress(
     useCallback((e) => {
-      return e.code === "KeyZ" && !e.shiftKey && ((window.navigator.platform.indexOf("Mac") === 0 && e.metaKey) || (window.navigator.platform.indexOf("Mac") !== 0 && e.ctrlKey));
+      return (
+        e.code === "KeyZ" &&
+        !e.shiftKey &&
+        ((window.navigator.platform.indexOf("Mac") === 0 && e.metaKey) ||
+          (window.navigator.platform.indexOf("Mac") !== 0 && e.ctrlKey))
+      );
     }, []),
     useCallback(() => {
       const canvas = fabricCanvasRef.current;
@@ -376,7 +380,12 @@ const GraffitiCanvas = () => {
   );
   useKeyPress(
     useCallback((e) => {
-      return e.code === "KeyZ" && e.shiftKey && ((window.navigator.platform.indexOf("Mac") === 0 && e.metaKey) || (window.navigator.platform.indexOf("Mac") !== 0 && e.ctrlKey));
+      return (
+        e.code === "KeyZ" &&
+        e.shiftKey &&
+        ((window.navigator.platform.indexOf("Mac") === 0 && e.metaKey) ||
+          (window.navigator.platform.indexOf("Mac") !== 0 && e.ctrlKey))
+      );
     }, []),
     useCallback(() => {
       const canvas = fabricCanvasRef.current;
@@ -495,7 +504,7 @@ const GraffitiCanvas = () => {
                 <Button
                   onClick={async () => {
                     setSoundLoading(true);
-                    // await startSound();
+                    await startSound();
                     setShowModal(false);
                     setSoundLoading(false);
                   }}
