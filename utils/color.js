@@ -62,3 +62,9 @@ export const colorsForDate = (date) => {
 
   return chroma.scale(colors).padding(0.175).mode("lab").colors(6);
 };
+
+export const hexToNormalizedHue = (hex) => {
+  const hue = chroma(hex).hsv()[0];
+  if (isNaN(hue)) return 0;
+  return hue / 360;
+};

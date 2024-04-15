@@ -14,7 +14,7 @@ const GraffitiGroup = fabric.util.createClass(fabric.Group, {
     this.set("visitorID", options.visitorID || "");
     this.set("seed", options.seed || "");
     this.set("brushRadius", options.brushRadius || 10);
-    this.set("brushDensity", options.brushDensity || 10);
+    this.set("brushNumParticles", options.brushNumParticles || 10);
     this.set("particleOpacity", options.particleOpacity || 1);
     this.set("particleRadius", options.particleRadius || 1);
     this.set("particleRadiusDeviation", options.particleRadiusDeviation || 0);
@@ -46,7 +46,7 @@ const GraffitiGroup = fabric.util.createClass(fabric.Group, {
       visitorID: this.get("visitorID"),
       seed: this.get("seed"),
       brushRadius: this.get("brushRadius"),
-      brushDensity: this.get("brushDensity"),
+      brushNumParticles: this.get("brushNumParticles"),
       particleOpacity: this.get("particleOpacity"),
       particleRadius: this.get("particleRadius"),
       particleRadiusDeviation: this.get("particleRadiusDeviation"),
@@ -68,7 +68,7 @@ fabric.GraffitiGroup.fromObject = function (object, callback) {
   const reconstructedObjects = [];
   const rng = new Prando(object.seed);
   object.objects.forEach((spray) => {
-    for (let i = 0; i < object.brushDensity; i++) {
+    for (let i = 0; i < object.brushNumParticles; i++) {
       const { x, y } = randomXY(
         { x: spray.pX, y: spray.pY },
         object.brushRadius,
@@ -98,7 +98,7 @@ fabric.GraffitiGroup.fromObject = function (object, callback) {
       visitorID: object.visitorID,
       seed: object.seed,
       brushRadius: object.brushRadius,
-      brushDensity: object.brushDensity,
+      brushNumParticles: object.brushNumParticles,
       particleOpacity: object.particleOpacity,
       particleRadius: object.particleRadius,
       particleRadiusDeviation: object.particleRadiusDeviation,

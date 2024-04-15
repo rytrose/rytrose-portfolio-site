@@ -9,7 +9,7 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
   type: "graffitiBrush",
 
   radius: 30,
-  density: 20,
+  numParticles: 20,
   particleOpacity: 1,
   particleRadius: 1,
   particleRadiusDeviation: 0,
@@ -60,16 +60,16 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
         maxParticleRadiusDeviation - denormalizedParticleRadiusDeviation;
     }
 
-    const minDensity = 6;
-    const maxDensity = 40;
-    const denormalizedDensity = denormalizeToRange(
+    const minNumParticles = 6;
+    const maxNumParticles = 40;
+    const denormalizedNumParticles = denormalizeToRange(
       value,
-      minDensity,
-      maxDensity
+      minNumParticles,
+      maxNumParticles
     );
-    const density = quantize(
-      denormalizedDensity,
-      Array.from({ length: maxDensity }, (_, i) => i + 1)
+    const numParticles = quantize(
+      denormalizedNumParticles,
+      Array.from({ length: maxNumParticles }, (_, i) => i + 1)
     );
 
     const minParticleOpacity = 0.25;
@@ -80,24 +80,12 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
       minParticleOpacity
     );
 
+    this.rawNormalizedBrushSize = value;
     this.radius = radius;
     this.particleRadius = particleRadius;
     this.particleRadiusDeviation = particleRadiusDeviation;
-    this.density = density;
+    this.numParticles = numParticles;
     this.particleOpacity = particleOpacity;
-
-    // console.log(
-    //   "radius",
-    //   this.radius,
-    //   "particleRadius",
-    //   this.particleRadius,
-    //   "particleRadiusDeviation",
-    //   this.particleRadiusDeviation,
-    //   "density",
-    //   this.density,
-    //   "particleOpacity",
-    //   this.particleOpacity
-    // );
 
     // Re-render to update cursor size
     this.canvas.requestRenderAll();
@@ -191,13 +179,14 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     const group = new GraffitiGroup(particles, {
       visitorID: this.visitorID,
       seed: this.seed,
+      rawNormalizedBrushSize: this.rawNormalizedBrushSize,
       brushRadius: this.radius,
-      brushDensity: this.density,
+      brushNumParticles: this.numParticles,
       particleOpacity: this.particleOpacity,
       particleRadius: this.particleRadius,
       particleRadiusDeviation: this.particleRadiusDeviation,
-      // TODO: consider passing array of spray densities
-      // to add RNG to density
+      // TODO: consider passing array of spray numParticles
+      // to add RNG to numParticles
       color: this.color,
     });
 
@@ -243,7 +232,7 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
   addSpray: function (pointer) {
     const particles = [];
     let paint = 0;
-    for (let i = 0; i < this.density; i++) {
+    for (let i = 0; i < this.numParticles; i++) {
       const { x, y } = randomXY(
         pointer,
         this.radius,
@@ -271,7 +260,7 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
   // when determining if the visitor is out of paint.
   maxPaintPerSpray: function () {
     return (
-      this.density *
+      this.numParticles *
       (Math.PI *
         Math.pow(this.particleRadius + this.particleRadiusDeviation, 2))
     );
