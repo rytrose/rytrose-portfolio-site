@@ -1,6 +1,7 @@
 import Prando from "prando";
 import * as Tone from "tone";
 import { hexToNormalizedHue } from "../color";
+import { denormalizeToRange } from "../normalize";
 
 export class GraffitiSound {
   BPM = 120;
@@ -82,6 +83,7 @@ export class GraffitiSound {
       // Range ~0.01 - ~0.59
       const density = particleArea / brushArea;
       const normalizedHue = hexToNormalizedHue(group.color);
+      const octave = Math.floor(denormalizeToRange(normalizedHue * 2, 2, 6));
 
       // Consider an attack every 16th note
       for (const i = 0; i < 16; i++) {
@@ -99,7 +101,7 @@ export class GraffitiSound {
           ":" +
           // Current sixteenth note
           (i % 4).toString();
-        synth.triggerAttackRelease("C4", "16n", scheduleTime);
+        synth.triggerAttackRelease(`C${octave}`, "16n", scheduleTime);
       }
     }, "1m").start("@8n");
     return [loop];
