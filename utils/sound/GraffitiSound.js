@@ -1,12 +1,17 @@
 import { el } from "@elemaudio/core";
 import WebRenderer from "@elemaudio/web-renderer";
-import { SAMPLES, fetchFiles } from "./utils";
+import { Samples, fetchFiles } from "./utils";
 import { hexToNormalizedHSL } from "../color";
 import { Interval, Note } from "tonal";
+import { elShiftSample, elStereoPan } from "./el";
 
 export class GraffitiSound {
   constructor() {
     this.groups = {};
+    this.bpm = 244;
+    // 16th note pulses at bpm in milliseconds
+    // this.metro = el.metro({ interval: 60_000 / this.bpm / 4 });
+    this.metro = el.metro({ interval: 60_000 / this.bpm });
   }
 
   updateGroups(eventType, target, allGroups) {
@@ -14,14 +19,18 @@ export class GraffitiSound {
     if (eventType === "added") {
       this.groups[target.seed] = {
         group: target,
-        node: this.nodeForGroup(target),
+        nodes: this.nodesForGroup(target),
       };
     } else if (eventType === "removed") {
       delete this.groups[target.seed];
     }
+    if (Samples.loaded) this.render();
   }
 
-  nodeForGroup(group) {
+  nodesForGroup(group) {
+    // When loading the page, the canvas loads before all samples
+    if (!Samples.loaded) return;
+
     const [h, s, l] = hexToNormalizedHSL(group.color);
 
     // Hue to pitch class
@@ -40,16 +49,44 @@ export class GraffitiSound {
     const octave = octaves[octaveIndex];
     const pitch = `${pitchClass}${octave}`;
     const shift = Interval.semitones(
-      Interval.distance(SAMPLES.STAB2.note.name, pitch)
+      Interval.distance(Samples.STAB2.note.name, pitch)
+    );
+
+    // Create pitched samples
+    let [left, right] = [0, 1].map((channel) =>
+      elShiftSample(
+        {
+          path: Samples.STAB2.chan(channel),
+          duration: Samples.STAB2.duration,
+          shift: shift,
+          mode: "trigger",
+        },
+        this.metro
+      )
     );
 
     // Lightness to volume
-    const vol = l;
+    [left, right] = [el.mul(l, left), el.mul(l, right)];
 
     // Position to pan
-    // TODO
+    const normalizedLRPosition = (group.left + group.width / 2) / 500;
+    const pan = Math.max(Math.min(normalizedLRPosition * 2 - 1, 1), -1);
+    [left, right] = elStereoPan({ pan: pan }, left, right);
 
-    console.log(group.seed, h, s, l, pitch, shift);
+    return { l: left, r: right };
+  }
+
+  async render() {
+    const groups = Object.values(this.groups);
+    if (groups.length > 0) {
+      let l = groups.map((g) => g.nodes.l);
+      l = el.div(el.add(...l), l.length);
+      let r = groups.map((g) => g.nodes.r);
+      r = el.div(el.add(...r), r.length);
+      console.log(await this.core.render(l, r));
+    } else {
+      console.log(await this.core.render(0));
+    }
   }
 
   async start() {
@@ -64,5 +101,12 @@ export class GraffitiSound {
       },
     });
     node.connect(this.ctx.destination);
+    // Define the nodes for all groups provided before samples were loaded
+    for (let group of Object.values(this.groups)) {
+      if (!group.nodes) {
+        group.nodes = this.nodesForGroup(group.group);
+      }
+    }
+    this.render();
   }
 }

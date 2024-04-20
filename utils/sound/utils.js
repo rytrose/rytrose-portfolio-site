@@ -1,9 +1,15 @@
 import { Note } from "tonal";
 
-export class Sample {
+class Sample {
   constructor(filename, note = undefined) {
     this.filename = filename;
     this.note = note;
+  }
+
+  updateWithBuffer(buf) {
+    this.sampleRate = buf.sampleRate;
+    this.length = buf.length;
+    this.duration = buf.duration;
   }
 
   chan(channel) {
@@ -11,22 +17,32 @@ export class Sample {
   }
 }
 
-export const SAMPLES = {
-  STAB2: new Sample("stab2.wav", Note.get("B2")),
-};
+/**
+ * Available samples. Note that the AudioBuffer properties for each sample
+ * are not populated until the sample has been fetched over the network.
+ */
+export class Samples {
+  static loaded = false;
+  static STAB2 = new Sample("stab2.wav", Note.get("B2"));
 
-export const BASE_URL =
-  "https://rytrose-personal-website.s3.amazonaws.com/portfolio-site/graffiti-sound/";
+  static all() {
+    return [this.STAB2];
+  }
+}
 
 export const fetchFiles = async (ctx) => {
+  const BASE_URL =
+    "https://rytrose-personal-website.s3.amazonaws.com/portfolio-site/graffiti-sound/";
   let fs = {};
-  for (let sample of Object.values(SAMPLES)) {
+  for (let sample of Samples.all()) {
     let res = await fetch(BASE_URL + sample.filename);
     let buf = await ctx.decodeAudioData(await res.arrayBuffer());
+    sample.updateWithBuffer(buf);
     for (let channel = 0; channel < buf.numberOfChannels; channel++) {
       fs[sample.chan(channel)] = buf.getChannelData(channel);
     }
   }
-  console.log("Loaded filesystem", Object.keys(fs));
+  Samples.loaded = true;
+  console.log("Loaded filesystem", Object.keys(fs), Samples.all());
   return fs;
 };
