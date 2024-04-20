@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.163.0",
+    "@elemaudio/core": "^3.2.1",
+    "@elemaudio/web-renderer": "^3.2.3",
     "animejs": "^3.2.1",
     "chroma-js": "^2.4.2",
     "fabric": "^5.2.4",
@@ -21,6 +23,7 @@
     "react-dom": "18.2.0",
     "react-slider": "^2.0.4",
     "swr": "^2.1.5",
+    "tonal": "^6.0.1",
     "tone": "^14.7.77",
     "use-resize-observer": "^9.0.2",
     "uuid": "^9.0.0"

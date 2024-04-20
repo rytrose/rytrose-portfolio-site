@@ -1,5 +1,5 @@
 import { useRef, useCallback } from "react";
-import { GraffitiSound } from "../utils/tone/GraffitiSound";
+import { GraffitiSound } from "../utils/sound/GraffitiSound";
 
 const useGraffitiSound = () => {
   const sound = new GraffitiSound();
