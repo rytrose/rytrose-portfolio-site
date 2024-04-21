@@ -17,8 +17,10 @@ import useGraffitiPalette from "./GraffitiPalette";
 import useTailwindBreakpoint from "../../hooks/useTailwindBreakpoint";
 
 const MAX_PAINT = 40000;
-// const TOTAL_REFILL_TIME_MS = 24 * 60 * 60 * 1000; // 24 hours
-const TOTAL_REFILL_TIME_MS = 30 * 1000; // 10 seconds
+const TOTAL_REFILL_TIME_MS =
+  process.env.NEXT_PUBLIC_DEV === "true"
+    ? 30 * 1000 // 10 seconds
+    : 10 * 60 * 1000; // 10 minutes
 const REFILL_INTERVAL_MS = 1000 / 60;
 
 const GraffitiCanvas = () => {

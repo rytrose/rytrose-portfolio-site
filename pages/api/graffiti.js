@@ -72,9 +72,10 @@ const GET = async (res) => {
 };
 
 const POST = async (req, res) => {
-  if (process.env.DEV === "true" && req.query.clear === "true") {
+  if (process.env.NEXT_PUBLIC_DEV === "true" && req.query.clear === "true") {
     console.log("clearing state");
-    await updateState(defaultState());
+    state = defaultState();
+    await updateState(state);
     res.status(200).send();
     return;
   }
