@@ -33,16 +33,18 @@ export class GraffitiSound {
 
     const [h, s, l] = hexToNormalizedHSL(group.color);
 
-    // Hue to pitch class
+    // Hue and saturation to pitch class
     const pitchClasses = Note.names();
-    const pitchClassIndex = Math.floor(h * pitchClasses.length);
+    const pitchClassIndex = Math.floor(((s + l) / 2) * pitchClasses.length);
     const pitchClass = pitchClasses[pitchClassIndex];
 
     // Saturation and lightness to octave
-    const octaves = Array.from({ length: 4 }, (_, i) => {
+    const minOctave = 2;
+    const numOctaves = 4;
+    const octaves = Array.from({ length: numOctaves }, (_, i) => {
       return (
         // Lowest octave is 2
-        2 + i
+        minOctave + i
       );
     });
     // More lightness and less saturated is higher
@@ -67,15 +69,20 @@ export class GraffitiSound {
     play = el.snapshot({ name: `${group.seed}:play` }, play, play);
 
     // Create pitched samples
+    const attenuated = 1 - 0.3 * (octave - minOctave - 1);
     let [left, right] = [0, 1].map((channel) =>
-      elShiftSample(
-        {
-          path: Samples.STAB2.chan(channel),
-          duration: Samples.STAB2.duration,
-          shift: shift,
-          mode: "trigger",
-        },
-        play
+      el.mul(
+        // Shifting up makes the sample louder, and shifting down softer, so adjust a bit
+        attenuated,
+        elShiftSample(
+          {
+            path: Samples.STAB2.chan(channel),
+            duration: Samples.STAB2.duration,
+            shift: shift,
+            mode: "trigger",
+          },
+          play
+        )
       )
     );
 
@@ -136,7 +143,7 @@ export class GraffitiSound {
           onComplete: () => {
             group.animate("opacity", "+=0.2", {
               duration: 50,
-              onChange: group.canvas.renderAll.bind(group.canvas),
+              onChange: group.canvas?.renderAll.bind(group.canvas),
             });
           },
         });
