@@ -72,6 +72,7 @@ const GET = async (res) => {
 };
 
 const POST = async (req, res) => {
+  const adminKey = req.headers["x-admin-key"];
   if (
     adminKey === process.env.RYTROSE_ADMIN_KEY &&
     req.query.clear === "true"
