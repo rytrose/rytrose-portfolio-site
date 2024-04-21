@@ -48,7 +48,7 @@ const Modal = ({ open, onClose, children, showClose = true }) => {
           <Button onClick={onClose}>close</Button>
         </div>
       )}
-      <div className="overflow-y-auto mt-2">{children}</div>
+      <div className="overflow-y-auto mt-2 max-w-xl">{children}</div>
     </dialog>
   );
 };

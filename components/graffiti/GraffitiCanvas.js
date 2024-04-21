@@ -27,6 +27,7 @@ const GraffitiCanvas = () => {
   // Modal state
   const [showModal, setShowModal] = useState(true);
   const [soundLoading, setSoundLoading] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   // Sound reference
   const [soundRef, startSound] = useGraffitiSound();
@@ -445,9 +446,17 @@ const GraffitiCanvas = () => {
 
   return (
     <div className="flex flex-col sm:h-[100vh] sm:max-h-[calc(100vh-162px-24px-48px)]">
-      <div className="flex justify-center">
+      <div className="flex justify-between my-[-10px]">
+        <div className={"w-[42px]"}></div>
         <Button border onClick={commitChanges} disabled={!changesStaged}>
-          commit
+          submit
+        </Button>
+        <Button
+          border
+          className={"w-[42px] block rounded-full"}
+          onClick={() => setShowInfoModal(true)}
+        >
+          ?
         </Button>
       </div>
       <div className="flex mt-8 mb-2 justify-center items-center">
@@ -517,6 +526,25 @@ const GraffitiCanvas = () => {
               )}
             </div>
           </div>
+        </Modal>
+      )}
+      {showInfoModal && (
+        <Modal open={showInfoModal} onClose={() => setShowInfoModal(false)}>
+          <div className="font-serif text-lg mb-4">what is this?</div>
+          <div className="text-sm mb-2">This is a community graffiti wall.</div>
+          <div className="text-sm mb-2">
+            Use your mouse or finger to pick a color and change the size of your
+            spray. Take aim and add to the canvas, but beware — you only have a
+            limited amount of paint. The wall is forgiving though, you can undo
+            and redo your previous lines. When you&apos;re ready for the paint
+            to dry, click &quot;submit&quot; to share your changes with the
+            community. You&apos;ll get more paint in a little bit.
+          </div>
+          <div className="text-sm mb-4">
+            Colors change daily. Paint refills completely every{" "}
+            {TOTAL_REFILL_TIME_MS / 60000} minutes.
+          </div>
+          <div className="text-sm">Also, your paint makes sound.</div>
         </Modal>
       )}
     </div>
