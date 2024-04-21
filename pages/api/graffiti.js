@@ -72,7 +72,10 @@ const GET = async (res) => {
 };
 
 const POST = async (req, res) => {
-  if (process.env.NEXT_PUBLIC_DEV === "true" && req.query.clear === "true") {
+  if (
+    adminKey === process.env.RYTROSE_ADMIN_KEY &&
+    req.query.clear === "true"
+  ) {
     console.log("clearing state");
     state = defaultState();
     await updateState(state);
@@ -80,10 +83,16 @@ const POST = async (req, res) => {
     return;
   }
 
+  const d = req.body;
+  if (d.length === 0) {
+    res.status(400).send();
+    return;
+  }
+
   state = await getCurrentState();
   state.history.push({ t: state.current.t, d: state.current.d });
   state.current.t = Date.now();
-  state.current.d = req.body;
+  state.current.d = d;
   await updateState(state);
   res.status(200).send();
 };
