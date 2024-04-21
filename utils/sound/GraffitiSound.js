@@ -60,10 +60,11 @@ export class GraffitiSound {
     // Range ~0.01 - ~0.59
     const density = particleArea / brushArea;
     const seed = hash(group.seed);
-    const play = el.ge(
+    let play = el.ge(
       1 - density,
       el.latch(this.metro, el.rand({ key: seed.toString() }))
     );
+    play = el.snapshot({ name: `${group.seed}:play` }, play, play);
 
     // Create pitched samples
     let [left, right] = [0, 1].map((channel) =>
@@ -97,9 +98,9 @@ export class GraffitiSound {
       l = el.div(el.add(...l), l.length);
       let r = groups.map((g) => g.nodes.r);
       r = el.div(el.add(...r), r.length);
-      console.log(await this.core.render(l, r));
+      console.debug(await this.core.render(l, r));
     } else {
-      console.log(await this.core.render(0));
+      console.debug(await this.core.render(0));
     }
   }
 
@@ -122,5 +123,24 @@ export class GraffitiSound {
       }
     }
     this.render();
+
+    // Setup play animation handler
+    this.core.on("snapshot", (e) => {
+      const [seed, event] = e.source.split(":");
+      if (event === "play") {
+        const group = this.groups[seed]?.group;
+        if (!group) return;
+        group.animate("opacity", "-=0.2", {
+          duration: 50,
+          onChange: group.canvas.renderAll.bind(group.canvas),
+          onComplete: () => {
+            group.animate("opacity", "+=0.2", {
+              duration: 50,
+              onChange: group.canvas.renderAll.bind(group.canvas),
+            });
+          },
+        });
+      }
+    });
   }
 }
