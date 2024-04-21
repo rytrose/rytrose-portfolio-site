@@ -7,10 +7,7 @@ import { el } from "@elemaudio/core";
  * or centered.
  */
 export const elStereoPan = ({ pan = 0.0, key = "pan" }, l, r) => {
-  const panMapped = el.mul(
-    el.div(el.add(el.const({ key: key, value: pan }), 1), 2),
-    el.div(Math.PI, 2)
-  );
+  const panMapped = el.mul(el.div(el.add(pan, 1), 2), el.div(Math.PI, 2));
   return [el.mul(l, el.cos(panMapped)), el.mul(r, el.sin(panMapped))];
 };
 

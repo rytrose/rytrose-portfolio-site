@@ -46,3 +46,17 @@ export const fetchFiles = async (ctx) => {
   console.log("Loaded filesystem", Object.keys(fs), Samples.all());
   return fs;
 };
+
+export const hash = (str) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    // Convert the character at the current index to a number.
+    var charCode = str.charCodeAt(i);
+    // Add the number to the hash code.
+    hash = (hash << 5) - hash + charCode;
+    // Convert the hash code to a 32-bit integer.
+    hash |= 0; // Convert to 32bit integer
+  }
+  // Return the hash code.
+  return hash;
+};
