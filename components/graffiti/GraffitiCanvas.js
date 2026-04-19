@@ -1,9 +1,9 @@
-import { fabric } from "fabric";
+import { Circle } from "fabric";
 import { useEffect, useRef, useCallback, useMemo, useState } from "react";
-import ReactSlider from "react-slider";
+import {Slider, SliderThumb, SliderTrack} from 'react-aria-components'
 import { compressToUTF16, decompressFromUTF16 } from "lz-string";
 import Modal from "../Modal";
-import useResizeObserver from "use-resize-observer";
+import useResizeObserver from "../../hooks/useResizeObserver";
 import useFabric from "../../hooks/useFabric";
 import useKeyPress from "../../hooks/useKeyPress";
 import useVisitor from "../../hooks/useVisitor";
@@ -28,6 +28,7 @@ const GraffitiCanvas = () => {
   const [showModal, setShowModal] = useState(true);
   const [soundLoading, setSoundLoading] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showInfoPulse, setShowInfoPulse] = useState(false);
 
   // Sound reference
   const [soundRef, startSound] = useGraffitiSound();
@@ -38,6 +39,7 @@ const GraffitiCanvas = () => {
   // Graffiti groups added to the canvas that haven't yet been committed
   const stagedGroupsRef = useRef([]);
   const [changesStaged, setChangesStaged] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
 
   // Colors for the day
   const [colorPalette, setColorPalette] = useState([]);
@@ -50,6 +52,21 @@ const GraffitiCanvas = () => {
 
   // Tailwind breakpoint
   const tailWindSm = useTailwindBreakpoint("sm");
+
+  // Platform detection for keyboard differences
+  const [isMac, setIsMac] = useState(false);
+  useEffect(() => {
+    setIsMac(window.navigator.platform.indexOf("Mac") === 0);
+  }, []);
+
+  // Ping the info button to draw attention
+  useEffect(() => {
+    // Start the animation a little after page load
+    setTimeout(() => setShowInfoPulse(true), 3000);
+    // Stop the animation after a while if the info button hasn't been clicked
+    const t = setTimeout(() => setShowInfoPulse(false), 30000);
+    return () => clearTimeout(t);
+  }, []);
 
   // Set the current day's colors on the client
   useEffect(() => {
@@ -127,7 +144,7 @@ const GraffitiCanvas = () => {
 
   // Creates the brush cursor
   const cursorRef = useRef(
-    new fabric.Circle({
+    new Circle({
       // Start cursor off-screen
       left: -100,
       top: -100,
@@ -164,7 +181,7 @@ const GraffitiCanvas = () => {
           top: y,
         })
         .setCoords();
-      canvas.bringToFront(cursor);
+      canvas.bringObjectToFront(cursor);
       canvas.requestRenderAll();
     });
 
@@ -177,14 +194,14 @@ const GraffitiCanvas = () => {
           top: -100,
         })
         .setCoords();
-      canvas.renderAll();
+      canvas.requestRenderAll();
     });
 
     // When graffiti groups are changed, updates the audio pipeline
     const updateAudioForGroups = (eventType) => {
       return (e) => {
-        if (e.target.type === "graffitiGroup") {
-          const groups = canvas.getObjects("graffitiGroup");
+        if (e.target.type === "graffitigroup") {
+          const groups = canvas.getObjects("graffitiGroup");          
           // Update the current sound
           sound.updateGroups(eventType, e.target, groups);
         }
@@ -195,7 +212,7 @@ const GraffitiCanvas = () => {
 
     // Add new group to staged groups
     canvas.on("object:added", (e) => {
-      if (loadedCanvasRef.current && e.target.type === "graffitiGroup") {
+      if (loadedCanvasRef.current && e.target.type === "graffitigroup") {
         stagedGroupsRef.current.push(e.target);
         setChangesStaged(true);
       }
@@ -204,7 +221,7 @@ const GraffitiCanvas = () => {
     // Remove group from staged groups
     canvas.on("object:removed", (e) => {
       const stagedGroups = stagedGroupsRef.current;
-      if (e.target.type === "graffitiGroup") {
+      if (e.target.type === "graffitigroup") {
         const i = stagedGroups.indexOf(e.target);
         if (i >= 0) {
           stagedGroups.splice(i, 1);
@@ -223,7 +240,8 @@ const GraffitiCanvas = () => {
         console.log("canvas size in bytes", data.length * 2);
         if (data) {
           const serializedCanvas = decompressFromUTF16(data);
-          canvas.loadFromJSON(serializedCanvas);
+          await canvas.loadFromJSON(serializedCanvas);
+          canvas.requestRenderAll();
         }
       } finally {
         loadedCanvasRef.current = true;
@@ -284,7 +302,6 @@ const GraffitiCanvas = () => {
     (value) => {
       const canvas = fabricCanvasRef.current;
       const brush = canvas.freeDrawingBrush;
-      if (brush.type !== "graffitiBrush") return;
       const newSize = brush.setBrushSize(value);
       if (cursorRef.current.get("radius") !== newSize) {
         cursorRef.current.set({ radius: newSize });
@@ -300,7 +317,6 @@ const GraffitiCanvas = () => {
       const canvas = fabricCanvasRef.current;
       if (!canvas) return;
       const brush = canvas.freeDrawingBrush;
-      if (brush.type !== "graffitiBrush") return;
       brush.color = color;
       setPaintColor(color);
     },
@@ -315,7 +331,7 @@ const GraffitiCanvas = () => {
   useKeyPress("KeyW", decrementGraffitiPalette);
   useKeyPress("KeyE", incrementGraffitiPalette);
 
-  // Setus up paint refill
+  // Sets up paint refill
   useEffect(() => {
     const interval = setInterval(() => {
       // Don't fill up the paint while actively painting
@@ -354,57 +370,58 @@ const GraffitiCanvas = () => {
 
   // Sets up undo/redo
   const stackRef = useRef([]);
+  const undo = useCallback(() => {
+    const canvas = fabricCanvasRef.current;
+    const stack = stackRef.current;
+    const visitor = visitorRef.current;
+    const stagedGroups = stagedGroupsRef.current;
+    const groups = canvas.getObjects("graffitiGroup");
+    if (groups.length === 0) return;
+    const last = groups.pop();
+    if (!stagedGroups.includes(last)) {
+      groups.push(last);
+      return;
+    }
+    stack.push(last);
+    canvas.remove(last);
+    updatePaint(Math.min(MAX_PAINT, visitor.paint + last.computePaint()));
+    setCanRedo(true);
+  }, [fabricCanvasRef, visitorRef, stackRef, stagedGroupsRef, updatePaint]);
+
+  const redo = useCallback(() => {
+    const canvas = fabricCanvasRef.current;
+    const stack = stackRef.current;
+    const visitor = visitorRef.current;
+    if (stack.length === 0) return;
+    const last = stack.pop();
+    if (visitor.paint < last.computePaint()) {
+      stack.push(last);
+      return;
+    }
+    canvas.add(last);
+    updatePaint(visitor.paint - last.computePaint());
+    setCanRedo(stack.length > 0);
+  }, [fabricCanvasRef, visitorRef, stackRef, updatePaint]);
+
   useKeyPress(
     useCallback((e) => {
       return (
         e.code === "KeyZ" &&
         !e.shiftKey &&
-        ((window.navigator.platform.indexOf("Mac") === 0 && e.metaKey) ||
-          (window.navigator.platform.indexOf("Mac") !== 0 && e.ctrlKey))
+        ((isMac && e.metaKey) || (!isMac && e.ctrlKey))
       );
-    }, []),
-    useCallback(() => {
-      const canvas = fabricCanvasRef.current;
-      const stack = stackRef.current;
-      const visitor = visitorRef.current;
-      const stagedGroups = stagedGroupsRef.current;
-      const groups = canvas.getObjects("graffitiGroup");
-      if (groups.length === 0) return;
-      const last = groups.pop();
-      if (!stagedGroups.includes(last)) {
-        // Don't undo unstaged groups
-        groups.push(last);
-        return;
-      }
-      stack.push(last);
-      canvas.remove(last);
-      updatePaint(visitor.paint + last.computePaint());
-    }, [fabricCanvasRef, visitorRef, stackRef, stagedGroupsRef, updatePaint])
+    }, [isMac]),
+    undo
   );
   useKeyPress(
     useCallback((e) => {
       return (
         e.code === "KeyZ" &&
         e.shiftKey &&
-        ((window.navigator.platform.indexOf("Mac") === 0 && e.metaKey) ||
-          (window.navigator.platform.indexOf("Mac") !== 0 && e.ctrlKey))
+        ((isMac && e.metaKey) || (!isMac && e.ctrlKey))
       );
-    }, []),
-    useCallback(() => {
-      const canvas = fabricCanvasRef.current;
-      const stack = stackRef.current;
-      const visitor = visitorRef.current;
-      if (stack.length === 0) return;
-      const last = stack.pop();
-      if (visitor.paint < last.computePaint()) {
-        // Not enough paint to redo
-        // TODO: alert user
-        stack.push(last);
-        return;
-      }
-      canvas.add(last);
-      updatePaint(visitor.paint - last.computePaint());
-    }, [fabricCanvasRef, visitorRef, stackRef, updatePaint])
+    }, [isMac]),
+    redo
   );
 
   // Sets up brush sizing keys, brush won't resize if painting
@@ -451,13 +468,21 @@ const GraffitiCanvas = () => {
         <Button border onClick={commitChanges} disabled={!changesStaged}>
           submit
         </Button>
-        <Button
-          border
-          className={"w-[42px] block rounded-full"}
-          onClick={() => setShowInfoModal(true)}
-        >
-          ?
-        </Button>
+        <div className="relative">
+          {showInfoPulse && (
+            <span className="absolute inset-0 rounded-full animate-ping-slow bg-slate-200 pointer-events-none" />
+          )}
+          <Button
+            border
+            className={"w-[42px] block rounded-full"}
+            onClick={() => {
+              setShowInfoModal(true);
+              setShowInfoPulse(false);
+            }}
+          >
+            ?
+          </Button>
+        </div>
       </div>
       <div className="flex mt-8 mb-2 justify-center items-center">
         {tailWindSm && (
@@ -468,29 +493,49 @@ const GraffitiCanvas = () => {
           <div className="text-xs font-serif text-slate-400">+ (E)</div>
         )}
       </div>
-      <div className="flex mt-4 mb-2 justify-center content-center">
+      <div className="flex mt-4 mb-2 justify-center items-center">
         {tailWindSm && (
           <div className="text-xs font-serif text-slate-400">&ndash; (A)</div>
         )}
-        <ReactSlider
-          className="top-2 mx-2 cursor-pointer w-[80%] xl:max-w-[50%] h-[1px] bg-slate-200"
-          thumbClassName="cursor-pointer w-4 h-4 bg-white border border-slate-300 rounded-full -bottom-2
-          focus-visible:outline-none focus-visible:border-slate-400"
+        <Slider
+          className="flex items-center w-[80%] xl:w-[50%] cursor-pointer"
           value={brushSize}
           step={0.01}
-          max={1}
+          maxValue={1}
           onChange={onBrushResize}
-        />
+          aria-label="Brush size slider"
+        >
+          <SliderTrack className="relative flex items-center mx-3 w-full h-5">
+            <div className="h-px w-full bg-slate-200 pointer-events-none" />
+            <SliderThumb className="absolute w-4 h-4 rounded-full border border-slate-300 active:border-slate-400 bg-white outline-none -translate-y-1/2 top-1/2" />
+          </SliderTrack>
+        </Slider>
         {tailWindSm && (
           <div className="text-xs font-serif text-slate-400">+ (D)</div>
         )}
       </div>
-      <div className="flex justify-center">
-        <ProgressBar
-          className="h-4 my-4 xl:max-w-[50%]"
-          progressColor={paintColor}
-          progress={(visitor.paint / MAX_PAINT) * 100}
-        />
+      <div className="flex justify-center my-4">
+        <div className="flex items-center w-[80%] xl:w-[50%]">
+          <Button
+            onClick={undo}
+            disabled={!changesStaged}
+            className="text-xs font-serif whitespace-nowrap"
+          >
+            ↺{tailWindSm && ` (${isMac ? "⌘" : "ctrl"}+Z)`}
+          </Button>
+          <ProgressBar
+            className="h-4 flex-1 mx-2"
+            progressColor={paintColor}
+            progress={(visitor.paint / MAX_PAINT) * 100}
+          />
+          <Button
+            onClick={redo}
+            disabled={!canRedo}
+            className="text-xs font-serif whitespace-nowrap"
+          >
+            ↻{tailWindSm && ` (${isMac ? "⌘⇧" : "ctrl+⇧"}+Z)`}
+          </Button>
+        </div>
       </div>
       <div ref={divRef} className="flex grow justify-center">
         <canvas

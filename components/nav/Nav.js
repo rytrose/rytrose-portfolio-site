@@ -2,7 +2,7 @@ import { useCallback, useState, useRef } from "react";
 import { atLeastSm } from "../../utils/responsive";
 import Name from "./Name";
 import NavLink from "./NavLink";
-import useResizeObserver from "use-resize-observer";
+import useResizeObserver from "../../hooks/useResizeObserver";
 import useEventListener from "../../hooks/useEventListener";
 import Socials from "../Socials";
 

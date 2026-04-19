@@ -17,7 +17,7 @@ const ProgressBar = ({
     <div
       className={
         className +
-        ` border border-slate-200 rounded-full [&>*]:rounded-full w-full`
+        ` border border-slate-200 rounded-full [&>*]:rounded-full w-full overflow-hidden`
       }
     >
       <div ref={progressRef} className={`h-full ${progressColor}`}></div>

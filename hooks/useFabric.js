@@ -1,4 +1,4 @@
-import { fabric } from "fabric";
+import { Canvas } from "fabric";
 import { useRef, useCallback } from "react";
 
 // N.B. `options` must be memoized, otherwise the callback
@@ -9,7 +9,7 @@ const useFabric = (options) => {
   const callbackRef = useCallback(
     (node) => {
       if (node) {
-        canvasRef.current = new fabric.Canvas(node, options);
+        canvasRef.current = new Canvas(node, options);
       } else if (canvasRef.current) {
         canvasRef.current.dispose();
       }

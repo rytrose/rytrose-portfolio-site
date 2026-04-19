@@ -1,20 +1,23 @@
-import { fabric } from "fabric";
+import { classRegistry, BaseBrush, Point } from "fabric";
 import Prando from "prando";
 import { denormalizeToRange, quantize } from "../../normalize";
 import { randomXY, randomRadius } from "../utils";
 import GraffitiGroup from "./GraffitiGroup";
 import GraffitiParticle from "./GraffitiParticle";
 
-const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
-  type: "graffitiBrush",
+class GraffitiBrush extends BaseBrush {
+  static type = "graffitiBrush";
 
-  radius: 30,
-  numParticles: 20,
-  particleOpacity: 1,
-  particleRadius: 1,
-  particleRadiusDeviation: 0,
+  constructor(canvas, visitorRef, cursorRef, updatePaint) {
+    super({
+      type: GraffitiBrush.type,
+      radius: 30,
+      numParticles: 20,
+      particleOpacity: 1,
+      particleRadius: 1,
+      particleRadiusDeviation: 0,
+    });
 
-  initialize: function (canvas, visitorRef, cursorRef, updatePaint) {
     this.canvas = canvas;
     this.sprays = [];
     this.visitorRef = visitorRef;
@@ -26,11 +29,10 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     this.painting = false;
     this.limitedToCanvasSize = true;
     this.last = { x: undefined, y: undefined };
-  },
+  }
 
-  // Value should be between 0-1
-  setBrushSize: function (value) {
-    // Don't update brush size if actively painting
+  setBrushSize(value) {
+     // Don't update brush size if actively painting
     if (this.painting) return;
 
     const minRadius = 4;
@@ -91,9 +93,9 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     this.canvas.requestRenderAll();
 
     return radius;
-  },
+  }
 
-  onMouseDown: function (pointer) {
+  onMouseDown(pointer) {
     // Reset sprays for new iteration
     this.sprays.length = 0;
     this.canvas.clearContext(this.canvas.contextTop);
@@ -115,9 +117,9 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
 
     // Render new spray as it is created
     this.render(spray);
-  },
+  }
 
-  onMouseMove: function (pointer) {
+  onMouseMove(pointer) {
     if (
       !this.painting ||
       (this.limitedToCanvasSize === true && this._isOutSideCanvas(pointer))
@@ -144,9 +146,9 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
 
     // Render new spray as it is created
     this.render(spray);
-  },
+  }
 
-  onMouseUp: function () {
+  onMouseUp() {
     this.painting = false;
 
     // Store and clear renderOnAddRemove
@@ -197,18 +199,18 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     this.canvas.clearContext(this.canvas.contextTop);
     this.canvas.renderOnAddRemove = originalRenderOnAddRemove;
     this.canvas.requestRenderAll();
-  },
+  }
 
-  particle: function (ctx, point) {
+  particle(ctx, point) {
     ctx.globalAlpha = this.particleOpacity;
     ctx.fillStyle = this.color;
     ctx.beginPath();
     ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2, false);
     ctx.closePath();
     ctx.fill();
-  },
+  }
 
-  render: function (spray) {
+  render(spray) {
     const ctx = this.canvas.contextTop;
     ctx.fillStyle = this.color;
     this._saveAndTransform(ctx);
@@ -217,9 +219,9 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
       this.particle(ctx, point);
     }
     ctx.restore();
-  },
+  }
 
-  _render: function () {
+  _render() {
     const ctx = this.canvas.contextTop;
     ctx.fillStyle = this.color;
     this._saveAndTransform(ctx);
@@ -227,9 +229,9 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
       this.render(this.sprays[i]);
     }
     ctx.restore();
-  },
+  }
 
-  addSpray: function (pointer) {
+  addSpray(pointer) {
     const particles = [];
     let paint = 0;
     for (let i = 0; i < this.numParticles; i++) {
@@ -239,7 +241,7 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
         this.rng.next(),
         this.rng.next()
       );
-      let point = new fabric.Point(x, y);
+      let point = new Point(x, y);
       point.radius = randomRadius(
         this.particleRadius,
         this.particleRadiusDeviation,
@@ -253,26 +255,28 @@ const GraffitiBrush = fabric.util.createClass(fabric.BaseBrush, {
     this.sprays.push(particles);
     this.deductPaint(paint);
     return particles;
-  },
+  }
 
   // Due to RNG in how much paint a single spray actually uses,
   // compute the maximum amount of paint per spray to check against
   // when determining if the visitor is out of paint.
-  maxPaintPerSpray: function () {
+  maxPaintPerSpray() {
     return (
       this.numParticles *
       (Math.PI *
         Math.pow(this.particleRadius + this.particleRadiusDeviation, 2))
     );
-  },
+  }
 
-  canSpray: function () {
+  canSpray() {
     return this.visitorRef.current.paint > this.maxPaintPerSpray();
-  },
+  }
 
-  deductPaint: function (paint) {
+  deductPaint(paint) {
     this.updatePaint(this.visitorRef.current.paint - paint);
-  },
-});
+  }
+}
 
 export default GraffitiBrush;
+
+classRegistry.setClass(GraffitiBrush, 'graffitiBrush');

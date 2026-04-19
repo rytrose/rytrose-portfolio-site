@@ -7,7 +7,7 @@ const Button = ({
   children,
 }) => {
   const buttonClasses = disabled
-    ? "cursor-pointer text-slate-200"
+    ? "cursor-not-allowed text-slate-200"
     : "cursor-pointer text-slate-400 hover:text-slate-500 active:text-slate-600";
   const borderClasses = border
     ? disabled
@@ -16,7 +16,7 @@ const Button = ({
     : "";
   const underlineClasses = underline ? "underline" : "";
   return (
-    <button className="outline-0" onClick={onClick} disabled={disabled}>
+    <button className={`outline-none ${disabled ? "cursor-not-allowed" : ""}`} onClick={onClick} disabled={disabled}>
       <span
         className={
           buttonClasses +

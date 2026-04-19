@@ -40,7 +40,7 @@ const Modal = ({ open, onClose, children, showClose = true }) => {
     <dialog
       ref={dialogRef}
       className={`flex flex-col transition duration-[400ms] opacity-0 backdrop:bg-slate-800 backdrop:opacity-80 rounded-xl overflow-hidden`}
-      onCancel={(e) => e.preventDefault()}
+      onCancel={(e) => { e.preventDefault(); onClose(); }}
     >
       {showClose && (
         <div className="flex font-serif text-sm h-8 overflow-hidden">

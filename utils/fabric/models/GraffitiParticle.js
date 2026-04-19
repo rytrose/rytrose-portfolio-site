@@ -1,27 +1,32 @@
-import { fabric } from "fabric";
+import { classRegistry, Circle, FabricObject } from "fabric";
 
-const GraffitiParticle = fabric.util.createClass(fabric.Circle, {
-  type: "graffitiParticle",
-  initialize: function (options) {
-    options || (options = {});
+class GraffitiParticle extends Circle {
+  static type = "graffitiParticle";
 
-    this.callSuper("initialize", options);
-    this.set("pX", options.pX || 0);
-    this.set("pY", options.pY || 0);
-  },
-  toObject: function () {
-    // Must reconstruct from RNG
+  constructor(options = {}) {
+    super({
+      ...options,
+      selectable: false,
+      hoverCursor: "auto"
+    });
+
+    this.pX = options.pX || 0;
+    this.pY = options.pY || 0;
+  }
+
+  toObject() {
+    // Must reconstruct from rng
     return {
-      pX: this.get("pX"),
-      pY: this.get("pY"),
+      pX: this.pX,
+      pY: this.pY,
     };
-  },
-  selectable: false,
-  hoverCursor: "auto",
-});
-fabric.GraffitiParticle = GraffitiParticle;
-fabric.GraffitiParticle.fromObject = function (object, callback) {
-  return fabric.Object._fromObject("GraffitiParticle", object, callback);
-};
+  }
+
+  static fromObject(object, options) {
+    return super.fromObject(object, options);
+  }
+}
 
 export default GraffitiParticle;
+
+classRegistry.setClass(GraffitiParticle, 'graffitiParticle');

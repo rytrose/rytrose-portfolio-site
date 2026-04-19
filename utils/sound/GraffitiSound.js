@@ -11,7 +11,6 @@ export class GraffitiSound {
     this.bpm = 144;
     // 16th note pulses at bpm in milliseconds
     this.metro = el.metro({ interval: 60_000 / this.bpm / 4 });
-    // this.metro = el.metro({ interval: 60_000 / this.bpm });
   }
 
   updateGroups(eventType, target, allGroups) {
@@ -63,8 +62,8 @@ export class GraffitiSound {
     const density = particleArea / brushArea;
     const seed = hash(group.seed);
     let play = el.ge(
-      1 - density,
-      el.latch(this.metro, el.rand({ key: seed.toString() }))
+      el.latch(this.metro, el.rand({ key: seed.toString() })),
+      density
     );
     play = el.snapshot({ name: `${group.seed}:play` }, play, play);
 
@@ -137,13 +136,14 @@ export class GraffitiSound {
       if (event === "play") {
         const group = this.groups[seed]?.group;
         if (!group) return;
-        group.animate("opacity", "-=0.2", {
+        const originalOpacity = group.opacity;
+        group.animate({ opacity: originalOpacity - 0.2 }, {
           duration: 50,
-          onChange: group.canvas.renderAll.bind(group.canvas),
+          onChange: () => group.canvas?.renderAll(),
           onComplete: () => {
-            group.animate("opacity", "+=0.2", {
+            group.animate({ opacity: originalOpacity }, {
               duration: 50,
-              onChange: group.canvas?.renderAll.bind(group.canvas),
+              onChange: () => group.canvas?.renderAll(),
             });
           },
         });
