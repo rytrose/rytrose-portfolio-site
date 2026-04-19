@@ -107,31 +107,23 @@ const GraffitiCanvas = () => {
       if (!fabricCanvasRef.current) return;
       const canvas = fabricCanvasRef.current;
 
+      // Keep canvas intrinsic size fixed at 500×500 and scale via CSS only.
+      // This keeps scene coordinates in the 0–500 range regardless of display size,
+      // so getScenePoint, _isOutSideCanvas, and pan/zoom all work correctly.
       const ratio = canvas.getWidth() / canvas.getHeight();
       const containerWidth = size.width;
       const containerHeight = size.height;
       const maxWidthHeight = containerWidth / ratio;
-      let scale, zoom, width, height;
+      let width, height;
 
-      // If setting the height to max width would make it taller than the container,
-      // use the container height instead to prevent scrolling
       if (maxWidthHeight > containerHeight) {
-        scale = containerHeight / canvas.getHeight();
-        zoom = canvas.getZoom() * scale;
         width = containerHeight * ratio;
         height = containerHeight;
       } else {
-        // Set the canvas to max width
-        scale = containerWidth / canvas.getWidth();
-        zoom = canvas.getZoom() * scale;
         width = containerWidth;
         height = containerWidth / ratio;
       }
-      canvas.setDimensions({
-        width: width,
-        height: height,
-      });
-      canvas.setViewportTransform([zoom, 0, 0, zoom, 0, 0]);
+      canvas.setDimensions({ width, height }, { cssOnly: true });
     },
     [fabricCanvasRef]
   );
