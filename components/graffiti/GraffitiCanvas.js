@@ -174,7 +174,7 @@ const GraffitiCanvas = () => {
     // Updates the brush cursor
     canvas.on("mouse:move", (event) => {
       const cursor = cursorRef.current;
-      const { x, y } = canvas.getPointer(event.e);
+      const { x, y } = canvas.getScenePoint(event.e);
       cursor
         .set({
           left: x,

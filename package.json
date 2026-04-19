@@ -14,7 +14,7 @@
     "@elemaudio/web-renderer": "^3.2.3",
     "animejs": "^3.2.1",
     "chroma-js": "^2.4.2",
-    "fabric": "^6.9.0",
+    "fabric": "^7.2.0",
     "js-yaml": "^4.1.0",
     "lz-string": "^1.5.0",
     "next": "^16.0.7",

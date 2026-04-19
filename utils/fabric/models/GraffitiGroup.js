@@ -51,7 +51,9 @@ class GraffitiGroup extends Group {
       top: object.top,
       width: object.width,
       height: object.height,
-      fill: object.fill
+      fill: object.fill,
+      originX: object.originX,
+      originY: object.originY
     };
     return toObject;
   }
@@ -67,10 +69,12 @@ class GraffitiGroup extends Group {
   static fromObject(object) {
     const reconstructedObjects = [];
     const rng = new Prando(object.seed);
-    // object.left/top are the bounding box left/top edge (serialized with default originX: "left").
-    // Group children must be in group-relative coords (relative to the group center).
-    const groupCenterX = object.left + object.width / 2;
-    const groupCenterY = object.top + object.height / 2;
+    // In Fabric v6 the default originX was "left", so left/top were the bounding box edges.
+    // In Fabric v7 the default changed to "center", so left/top are the bounding box center.
+    // Old data has no originX stored (undefined → treat as "left"); new data stores it explicitly.
+    const isCenterOrigin = object.originX === "center";
+    const groupCenterX = isCenterOrigin ? object.left : object.left + object.width / 2;
+    const groupCenterY = isCenterOrigin ? object.top : object.top + object.height / 2;
     object.objects.forEach((spray) => {
       for (let i = 0; i < object.brushNumParticles; i++) {
         const { x, y } = randomXY(
