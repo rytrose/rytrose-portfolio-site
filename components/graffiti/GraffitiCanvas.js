@@ -16,7 +16,7 @@ import { colorsForDate } from "../../utils/color";
 import useGraffitiPalette from "./GraffitiPalette";
 import useTailwindBreakpoint from "../../hooks/useTailwindBreakpoint";
 
-const MAX_PAINT = 40000;
+const MAX_PAINT = 60000;
 const TOTAL_REFILL_TIME_MS =
   process.env.NEXT_PUBLIC_DEV === "true"
     ? 30 * 1000 // 10 seconds
@@ -107,23 +107,25 @@ const GraffitiCanvas = () => {
       if (!fabricCanvasRef.current) return;
       const canvas = fabricCanvasRef.current;
 
-      // Keep canvas intrinsic size fixed at 500×500 and scale via CSS only.
-      // This keeps scene coordinates in the 0–500 range regardless of display size,
-      // so getScenePoint, _isOutSideCanvas, and pan/zoom all work correctly.
       const ratio = canvas.getWidth() / canvas.getHeight();
       const containerWidth = size.width;
       const containerHeight = size.height;
       const maxWidthHeight = containerWidth / ratio;
-      let width, height;
+      let scale, zoom, width, height;
 
       if (maxWidthHeight > containerHeight) {
+        scale = containerHeight / canvas.getHeight();
+        zoom = canvas.getZoom() * scale;
         width = containerHeight * ratio;
         height = containerHeight;
       } else {
+        scale = containerWidth / canvas.getWidth();
+        zoom = canvas.getZoom() * scale;
         width = containerWidth;
         height = containerWidth / ratio;
       }
-      canvas.setDimensions({ width, height }, { cssOnly: true });
+      canvas.setDimensions({ width, height });
+      canvas.setViewportTransform([zoom, 0, 0, zoom, 0, 0]);
     },
     [fabricCanvasRef]
   );
@@ -143,6 +145,7 @@ const GraffitiCanvas = () => {
       radius: 0,
       fill: undefined,
       stroke: "rgb(226,232,240)",
+      strokeWidth: 4,
       originX: "center",
       originY: "center",
       excludeFromExport: true,
@@ -453,9 +456,11 @@ const GraffitiCanvas = () => {
     })();
   }, [stagedGroupsRef, stackRef, fabricCanvasRef, setLastPainted]);
 
+  // -mt-8 and -mb-8 cancel Layout's py-8 padding so the height only needs to account for
+  // Nav's mt-[49px] and mb-[49px] (98px total). Update if Nav or Footer height changes.
   return (
-    <div className="flex flex-col sm:h-[100vh] sm:max-h-[calc(100vh-162px-24px-48px)]">
-      <div className="flex justify-between my-[-10px]">
+    <div className="flex flex-col -mt-8 -mb-8 h-[calc(100vh-98px)] pb-4">
+      <div className="flex justify-between mt-4 mb-[-10px]">
         <div className={"w-[42px]"}></div>
         <Button className="font-serif rounded-xl" border onClick={commitChanges} disabled={!changesStaged}>
           submit
@@ -529,12 +534,12 @@ const GraffitiCanvas = () => {
           </Button>
         </div>
       </div>
-      <div ref={divRef} className="flex grow justify-center">
+      <div ref={divRef} className="flex grow min-h-0 justify-center overflow-hidden">
         <canvas
           className="border border-slate-200"
           ref={canvasElRef}
-          width={500}
-          height={500}
+          width={2000}
+          height={2000}
         />
       </div>
       {showModal && (

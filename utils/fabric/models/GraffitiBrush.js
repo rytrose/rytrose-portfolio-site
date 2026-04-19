@@ -35,12 +35,12 @@ class GraffitiBrush extends BaseBrush {
      // Don't update brush size if actively painting
     if (this.painting) return;
 
-    const minRadius = 4;
-    const maxRadius = 50;
+    const minRadius = 8;
+    const maxRadius = 100;
     const radius = denormalizeToRange(value, minRadius, maxRadius);
 
-    const minParticleRadius = 0.75;
-    const maxParticleRadius = 1.25;
+    const minParticleRadius = 1.5;
+    const maxParticleRadius = 2.5;
     const particleRadius = denormalizeToRange(
       value,
       maxParticleRadius,
@@ -48,7 +48,7 @@ class GraffitiBrush extends BaseBrush {
     );
 
     const minParticleRadiusDeviation = 0;
-    const maxParticleRadiusDeviation = 6;
+    const maxParticleRadiusDeviation = 12;
     const denormalizedParticleRadiusDeviation = denormalizeToRange(
       value,
       minParticleRadiusDeviation,
@@ -112,6 +112,17 @@ class GraffitiBrush extends BaseBrush {
     this.seed = `${this.visitorID}-${Date.now()}`;
     this.rng = new Prando(this.seed);
 
+    // Off-screen canvas at scene scale. Particles accumulate here and are blitted
+    // to contextTop via drawImage, matching Fabric's objectCaching compositing path
+    // so live drawing appearance matches the rendered group after mouseup.
+    const zoom = this.canvas.getZoom();
+    const sceneW = Math.round(this.canvas.getWidth() / zoom);
+    const sceneH = Math.round(this.canvas.getHeight() / zoom);
+    this._strokeEl = document.createElement('canvas');
+    this._strokeEl.width = sceneW;
+    this._strokeEl.height = sceneH;
+    this._strokeCtx = this._strokeEl.getContext('2d');
+
     // Create and persist new spray
     const spray = this.addSpray(pointer);
 
@@ -150,6 +161,8 @@ class GraffitiBrush extends BaseBrush {
 
   onMouseUp() {
     this.painting = false;
+    this._strokeEl = null;
+    this._strokeCtx = null;
 
     // Store and clear renderOnAddRemove
     const originalRenderOnAddRemove = this.canvas.renderOnAddRemove;
@@ -201,34 +214,40 @@ class GraffitiBrush extends BaseBrush {
     this.canvas.requestRenderAll();
   }
 
-  particle(ctx, point) {
-    ctx.globalAlpha = this.particleOpacity;
-    ctx.fillStyle = this.color;
-    ctx.beginPath();
-    ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2, false);
-    ctx.closePath();
-    ctx.fill();
-  }
-
   render(spray) {
-    const ctx = this.canvas.contextTop;
-    ctx.fillStyle = this.color;
-    this._saveAndTransform(ctx);
-    for (let i = 0; i < spray.length; i++) {
-      const point = spray[i];
-      this.particle(ctx, point);
+    // Accumulate spray particles onto the off-screen stroke canvas at scene coordinates
+    const sCtx = this._strokeCtx;
+    sCtx.globalAlpha = this.particleOpacity;
+    sCtx.fillStyle = this.color;
+    for (const point of spray) {
+      sCtx.beginPath();
+      sCtx.arc(point.x, point.y, point.radius, 0, Math.PI * 2, false);
+      sCtx.closePath();
+      sCtx.fill();
     }
+    // Blit to contextTop with viewport transform — same compositing path as objectCaching
+    const ctx = this.canvas.contextTop;
+    this.canvas.clearContext(ctx);
+    this._saveAndTransform(ctx);
+    ctx.drawImage(this._strokeEl, 0, 0);
     ctx.restore();
   }
 
   _render() {
-    const ctx = this.canvas.contextTop;
-    ctx.fillStyle = this.color;
-    this._saveAndTransform(ctx);
-    for (let i = 0; i < this.sprays.length; i++) {
-      this.render(this.sprays[i]);
+    if (this._strokeEl) {
+      const ctx = this.canvas.contextTop;
+      this.canvas.clearContext(ctx);
+      this._saveAndTransform(ctx);
+      ctx.drawImage(this._strokeEl, 0, 0);
+      ctx.restore();
     }
-    ctx.restore();
+  }
+
+  _isOutSideCanvas(pointer) {
+    const zoom = this.canvas.getZoom();
+    const sceneWidth = this.canvas.getWidth() / zoom;
+    const sceneHeight = this.canvas.getHeight() / zoom;
+    return pointer.x < 0 || pointer.x > sceneWidth || pointer.y < 0 || pointer.y > sceneHeight;
   }
 
   addSpray(pointer) {

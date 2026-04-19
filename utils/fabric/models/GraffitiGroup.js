@@ -10,7 +10,7 @@ class GraffitiGroup extends Group {
       ...options,
       hasControls: false,
       selectable: false,
-      hoverCursor: "auto"
+      hoverCursor: "auto",
     });
 
     this.visitorID = options.visitorID || "";

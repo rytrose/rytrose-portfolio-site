@@ -87,8 +87,8 @@ export class GraffitiSound {
 
     // Position to pan
     const panLFO = el.triangle(1 / 4);
-    const normalizedLeft = Math.max(group.left / 500, 0);
-    const normalizedRight = Math.min((group.left + group.width) / 500, 1);
+    const normalizedLeft = Math.max(group.left / 2000, 0);
+    const normalizedRight = Math.min((group.left + group.width) / 2000, 1);
     const panAmp = (normalizedRight - normalizedLeft) * 2;
     const shiftedLeft = normalizedLeft * 2 - 1;
     const pan = el.add(shiftedLeft, el.mul(panLFO, panAmp));
