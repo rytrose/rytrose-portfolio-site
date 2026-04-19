@@ -552,7 +552,7 @@ const GraffitiCanvas = () => {
           showClose={false}
         >
           <div className="flex flex-col justify-center">
-            <p className="text-sm">press begin to make art</p>
+            <p className="text-md">Would you like to create art?</p>
             <div className="flex justify-center mt-2">
               {soundLoading ? (
                 <Loading className="w-[24px]" fill="#94a3b8" />
@@ -566,7 +566,7 @@ const GraffitiCanvas = () => {
                   }}
                   className="font-serif text-center"
                 >
-                  begin
+                  yes
                 </Button>
               )}
             </div>
