@@ -465,7 +465,7 @@ const GraffitiCanvas = () => {
     <div className="flex flex-col sm:h-[100vh] sm:max-h-[calc(100vh-162px-24px-48px)]">
       <div className="flex justify-between my-[-10px]">
         <div className={"w-[42px]"}></div>
-        <Button border onClick={commitChanges} disabled={!changesStaged}>
+        <Button className="font-serif rounded-xl" border onClick={commitChanges} disabled={!changesStaged}>
           submit
         </Button>
         <div className="relative">
