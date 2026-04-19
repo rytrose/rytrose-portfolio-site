@@ -1,11 +1,13 @@
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { GraffitiSound } from "../utils/sound/GraffitiSound";
 
 const useGraffitiSound = () => {
-  const sound = new GraffitiSound();
-  const soundRef = useRef(sound);
+  const soundRef = useRef(new GraffitiSound());
   const startSound = useCallback(async () => {
     await soundRef.current.start();
+  }, [soundRef]);
+  useEffect(() => {
+    return () => soundRef.current.stop();
   }, [soundRef]);
   return [soundRef, startSound];
 };

@@ -98,6 +98,7 @@ export class GraffitiSound {
   }
 
   async render() {
+    if (!this.core) return;
     const groups = Object.values(this.groups);
     if (groups.length > 0) {
       let l = groups.map((g) => g.nodes.l);
@@ -108,6 +109,10 @@ export class GraffitiSound {
     } else {
       console.debug(await this.core.render(0));
     }
+  }
+
+  stop() {
+    this.ctx?.close();
   }
 
   async start() {
