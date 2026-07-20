@@ -3,7 +3,7 @@ import Script from "next/script";
 import Footer from "./Footer";
 import Nav from "./nav/Nav";
 
-const Layout = ({ children, className }) => {
+const Layout = ({ children, className, hideHeaderFooter }) => {
   return (
     <html className={className}>
       <body>
@@ -13,10 +13,16 @@ const Layout = ({ children, className }) => {
           <link rel="icon" href="/favicon.ico" />
         </Head>
         <Script src="https://kit.fontawesome.com/f587b9131c.js" />
-        <Nav>
-          <div className="py-8 mx-8 sm:mx-24">{children}</div>
-        </Nav>
-        <Footer />
+        {hideHeaderFooter ? (
+          <div>{children}</div>
+        ) : (
+          <>
+            <Nav>
+              <div className="py-8 mx-8 sm:mx-24">{children}</div>
+            </Nav>
+            <Footer />
+          </>
+        )}
       </body>
     </html>
   );

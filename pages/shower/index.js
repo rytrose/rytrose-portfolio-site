@@ -4,7 +4,7 @@ import Button from "../../components/Button";
 
 const Shower = () => {
   return (
-    <div className="flex flex-col items-center gap-8 px-4 py-4">
+    <div className="flex flex-col items-center gap-8 px-4 py-12">
       <h1 className="font-serif text-4xl text-center">We're having a baby!</h1>
       <p className="font-sans text-md text-center">Thank you for celebrating with us. Please RSVP at the link below.</p>
 
@@ -32,5 +32,7 @@ const Shower = () => {
     </div>
   );
 };
+
+Shower.hideHeaderFooter = true;
 
 export default Shower;

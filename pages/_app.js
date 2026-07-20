@@ -15,7 +15,7 @@ const dmSerifText = DM_Serif_Text({
 
 function MyApp({ Component, pageProps }) {
   return (
-    <Layout className={`${poppins.variable} ${dmSerifText.variable}`}>
+    <Layout className={`${poppins.variable} ${dmSerifText.variable}`} hideHeaderFooter={!!Component.hideHeaderFooter}>
       <Component {...pageProps} />
     </Layout>
   );
