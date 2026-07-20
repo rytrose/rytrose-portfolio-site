@@ -10,7 +10,7 @@ const S3Image = ({ path, alt, width, height, blurDataURL }) => {
       alt={alt}
       width={width}
       height={height}
-      placeholder={!!blurDataURL && "blur"}
+      placeholder={blurDataURL ? "blur" : "empty"}
       blurDataURL={blurDataURL}
       className={`duration-500 ${isLoading ? "scale-125" : "scale-100"}`}
       onLoad={() => setLoading(false)}
