@@ -16,7 +16,7 @@ import { colorsForDate } from "../../utils/color";
 import useGraffitiPalette from "./GraffitiPalette";
 import useTailwindBreakpoint from "../../hooks/useTailwindBreakpoint";
 
-const MAX_PAINT = 60000;
+const MAX_PAINT = 120000;
 const TOTAL_REFILL_TIME_MS =
   process.env.NEXT_PUBLIC_DEV === "true"
     ? 30 * 1000 // 10 seconds

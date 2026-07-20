@@ -1,6 +1,6 @@
 import { FabricObject, Group, classRegistry } from "fabric";
 import Prando from "prando";
-import { randomXY, randomRadius } from "../utils";
+import { randomXY, randomXYGaussian, randomRadius } from "../utils";
 
 class GraffitiGroup extends Group {
   static type = "graffitiGroup";
@@ -18,9 +18,11 @@ class GraffitiGroup extends Group {
     this.brushRadius = options.brushRadius || 10;
     this.brushNumParticles = options.brushNumParticles || 10;
     this.particleOpacity = options.particleOpacity || 1;
+    this.paintOpacity = options.paintOpacity ?? options.particleOpacity ?? 1;
     this.particleRadius = options.particleRadius || 1;
     this.particleRadiusDeviation = options.particleRadiusDeviation || 0;
     this.color = options.color || "rgb(0,0,0)";
+    this.gaussianDistribution = options.gaussianDistribution || false;
   }
 
   toObject() {
@@ -39,9 +41,11 @@ class GraffitiGroup extends Group {
       brushRadius: this.brushRadius,
       brushNumParticles: this.brushNumParticles,
       particleOpacity: this.particleOpacity,
+      paintOpacity: this.paintOpacity,
       particleRadius: this.particleRadius,
       particleRadiusDeviation: this.particleRadiusDeviation,
       color: this.color,
+      gaussianDistribution: this.gaussianDistribution,
       objects: reducedObjects,
       // WARNING: dropped "version" for size, may break things in future
       // versions of fabric, but as of 5.2.4 it's only used in exporting to
@@ -75,9 +79,16 @@ class GraffitiGroup extends Group {
     const isCenterOrigin = object.originX === "center";
     const groupCenterX = isCenterOrigin ? object.left : object.left + object.width / 2;
     const groupCenterY = isCenterOrigin ? object.top : object.top + object.height / 2;
+
+    // Select distribution: new groups use Gaussian (denser center), old groups keep uniform
+    const positionFn = object.gaussianDistribution ? randomXYGaussian : randomXY;
+
+    // New groups have paintOpacity; old groups only have particleOpacity (the Fabric opacity)
+    const isNewGroup = object.paintOpacity !== undefined;
+
     object.objects.forEach((spray) => {
       for (let i = 0; i < object.brushNumParticles; i++) {
-        const { x, y } = randomXY(
+        const { x, y } = positionFn(
           { x: spray.pX, y: spray.pY },
           object.brushRadius,
           rng.next(),
@@ -91,7 +102,10 @@ class GraffitiGroup extends Group {
           left: x - groupCenterX,
           top: y - groupCenterY,
           fill: object.color,
-          opacity: object.particleOpacity,
+          // New groups: Fabric opacity stays 1, paintOpacity carries the alpha into the gradient.
+          // Old groups: opacity is set to particleOpacity so the particle constructor fallback works.
+          opacity: isNewGroup ? 1 : object.particleOpacity,
+          paintOpacity: isNewGroup ? object.paintOpacity : undefined,
           radius: randomRadius(
             object.particleRadius,
             object.particleRadiusDeviation,

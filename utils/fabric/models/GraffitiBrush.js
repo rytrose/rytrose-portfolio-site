@@ -1,7 +1,7 @@
 import { classRegistry, BaseBrush, Point } from "fabric";
 import Prando from "prando";
 import { denormalizeToRange, quantize } from "../../normalize";
-import { randomXY, randomRadius } from "../utils";
+import { randomXYGaussian, randomRadius, parseCSSColorToRGB } from "../utils";
 import GraffitiGroup from "./GraffitiGroup";
 import GraffitiParticle from "./GraffitiParticle";
 
@@ -29,6 +29,11 @@ class GraffitiBrush extends BaseBrush {
     this.painting = false;
     this.limitedToCanvasSize = true;
     this.last = { x: undefined, y: undefined };
+    this.gaussianDistribution = true;
+
+    // Lazy RGB cache for gradient construction — re-parsed only when color changes
+    this._cachedColor = null;
+    this._cachedColorRGB = null;
   }
 
   setBrushSize(value) {
@@ -39,8 +44,8 @@ class GraffitiBrush extends BaseBrush {
     const maxRadius = 100;
     const radius = denormalizeToRange(value, minRadius, maxRadius);
 
-    const minParticleRadius = 1.5;
-    const maxParticleRadius = 2.5;
+    const minParticleRadius = 2;
+    const maxParticleRadius = 5;
     const particleRadius = denormalizeToRange(
       value,
       maxParticleRadius,
@@ -48,7 +53,7 @@ class GraffitiBrush extends BaseBrush {
     );
 
     const minParticleRadiusDeviation = 0;
-    const maxParticleRadiusDeviation = 12;
+    const maxParticleRadiusDeviation = 10;
     const denormalizedParticleRadiusDeviation = denormalizeToRange(
       value,
       minParticleRadiusDeviation,
@@ -62,8 +67,8 @@ class GraffitiBrush extends BaseBrush {
         maxParticleRadiusDeviation - denormalizedParticleRadiusDeviation;
     }
 
-    const minNumParticles = 6;
-    const maxNumParticles = 40;
+    const minNumParticles = 4;
+    const maxNumParticles = 20;
     const denormalizedNumParticles = denormalizeToRange(
       value,
       minNumParticles,
@@ -182,7 +187,8 @@ class GraffitiBrush extends BaseBrush {
           originX: "center",
           originY: "center",
           fill: this.color,
-          opacity: this.particleOpacity,
+          opacity: 1,
+          paintOpacity: this.particleOpacity,
         });
         particles.push(particle);
       }
@@ -198,11 +204,13 @@ class GraffitiBrush extends BaseBrush {
       brushRadius: this.radius,
       brushNumParticles: this.numParticles,
       particleOpacity: this.particleOpacity,
+      paintOpacity: this.particleOpacity,
       particleRadius: this.particleRadius,
       particleRadiusDeviation: this.particleRadiusDeviation,
       // TODO: consider passing array of spray numParticles
       // to add RNG to numParticles
       color: this.color,
+      gaussianDistribution: this.gaussianDistribution,
     });
 
     // Add to canvas
@@ -215,16 +223,28 @@ class GraffitiBrush extends BaseBrush {
   }
 
   render(spray) {
-    // Accumulate spray particles onto the off-screen stroke canvas at scene coordinates
+    // Lazy-parse color to RGB for gradient construction (once per color value)
+    if (this.color !== this._cachedColor) {
+      this._cachedColorRGB = parseCSSColorToRGB(this.color);
+      this._cachedColor = this.color;
+    }
+    const [r, g, b] = this._cachedColorRGB;
+
+    // Accumulate spray particles onto the off-screen stroke canvas at scene coordinates.
+    // Opacity is baked into the gradient stops so particles blend naturally.
     const sCtx = this._strokeCtx;
-    sCtx.globalAlpha = this.particleOpacity;
-    sCtx.fillStyle = this.color;
     for (const point of spray) {
+      const { x, y, radius } = point;
+      const grad = sCtx.createRadialGradient(x, y, 0, x, y, radius);
+      grad.addColorStop(0, `rgba(${r},${g},${b},${this.particleOpacity})`);
+      grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+      sCtx.fillStyle = grad;
       sCtx.beginPath();
-      sCtx.arc(point.x, point.y, point.radius, 0, Math.PI * 2, false);
+      sCtx.arc(x, y, radius, 0, Math.PI * 2, false);
       sCtx.closePath();
       sCtx.fill();
     }
+
     // Blit to contextTop with viewport transform — same compositing path as objectCaching
     const ctx = this.canvas.contextTop;
     this.canvas.clearContext(ctx);
@@ -254,7 +274,7 @@ class GraffitiBrush extends BaseBrush {
     const particles = [];
     let paint = 0;
     for (let i = 0; i < this.numParticles; i++) {
-      const { x, y } = randomXY(
+      const { x, y } = randomXYGaussian(
         pointer,
         this.radius,
         this.rng.next(),
